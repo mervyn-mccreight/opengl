@@ -1,11 +1,13 @@
 package de.fhwedel.opengl;
 
+import com.jogamp.common.nio.Buffers;
+
 import javax.media.opengl.GL;
-import javax.media.opengl.GL2;
+import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
-import javax.media.opengl.fixedfunc.GLMatrixFunc;
-import javax.media.opengl.glu.GLU;
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 
@@ -13,19 +15,25 @@ public class RenderLoop implements GLEventListener {
 
     private long lastTime = System.currentTimeMillis();
 
-    private float vertices[] = {
-            0.0f, 0.8f,
-            -0.8f, -0.8f,
-            0.8f, -0.8f
+    // An array of 3 vectors which represents 3 vertices
+    float vertexBufferData[] = {
+            -1.0f, -1.0f, 0.0f,
+            1.0f, -1.0f, 0.0f,
+            0.0f,  1.0f, 0.0f,
     };
+    private int vertexBufferId;
+    private int programId;
 
-    private int vertexShader;
-    private int fragmentShader;
-    private int program;
 
     @Override
     public void init(GLAutoDrawable drawable) {
         GL gl = drawable.getGL();
+
+        System.out.println("Chosen GLCapabilities: " + drawable.getChosenGLCapabilities());
+        System.out.println("INIT GL IS: " + gl.getClass().getName());
+        System.out.println("GL_VENDOR: " + gl.glGetString(GL.GL_VENDOR));
+        System.out.println("GL_RENDERER: " + gl.glGetString(GL.GL_RENDERER));
+        System.out.println("GL_VERSION: " + gl.glGetString(GL.GL_VERSION));
 
         gl.setSwapInterval(1);
         gl.glEnable(GL.GL_CULL_FACE);
@@ -33,62 +41,89 @@ public class RenderLoop implements GLEventListener {
         gl.glEnable(GL.GL_DEPTH_TEST);
         gl.glDepthFunc(GL.GL_LEQUAL);
 
-        GL2 gl2 = gl.getGL2();
 
-        vertexShader = gl2.glCreateShader(GL2.GL_VERTEX_SHADER);
+        GL3 gl3 = gl.getGL3();
 
-        gl2.glShaderSource(vertexShader, 1, new String[]{"#version 120\n",
-                        "attribute vec2 coord2d;                  ",
-                        "void main(void) {                        ",
-                        "  gl_Position = vec4(coord2d, 0.0, 1.0); ",
-                        "}"},
-                null);
-        gl2.glCompileShader(vertexShader);
+        IntBuffer vertexArrayId = IntBuffer.allocate(1);
+        gl3.glGenVertexArrays(1, vertexArrayId);
+        gl3.glBindVertexArray(vertexArrayId.get(0));
 
-        fragmentShader = gl2.glCreateShader(GL2.GL_FRAGMENT_SHADER);
+        IntBuffer vertexBuffer = IntBuffer.allocate(1);
+        gl3.glGenBuffers(1, vertexBuffer);
+        vertexBufferId = vertexBuffer.get(0);
+        gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, vertexBufferId);
+        gl3.glBufferData(GL3.GL_ARRAY_BUFFER, vertexBufferData.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(vertexBufferData), GL3.GL_STATIC_DRAW);
 
-        gl2.glShaderSource(fragmentShader, 1,
-                new String[]{"#version 120\n",
-                        "void main(void) {",
-                        "gl_FragColor[0] = 0.0;",
-                        "gl_FragColor[1] = 0.0;",
-                        "gl_FragColor[2] = 1.0;",
-                        "}"},
-                null);
+        programId = loadShaders(gl3);
+    }
 
-        gl2.glCompileShader(fragmentShader);
+    private int loadShaders(GL3 gl3) {
+        int vertexShaderId = gl3.glCreateShader(GL3.GL_VERTEX_SHADER);
+        int fragmentShaderId = gl3.glCreateShader(GL3.GL_FRAGMENT_SHADER);
 
-        IntBuffer intBuffer = IntBuffer.allocate(1);
+        System.out.println("Compiling vertex shader");
+        String vertexShaderSource[] = {"#version 330 core\n" +
+                                        "layout(location = 0) in vec3 vertexPosition_modelspace;\n" +
+                                        "void main(){\n" +
+                                        "   gl_Position.xyz = vertexPosition_modelspace;\n" +
+                                        "   gl_Position.w = 1.0;\n" +
+                                        "}"};
 
-        // BRB
-        gl2.glGetShaderiv(vertexShader, GL2.GL_COMPILE_STATUS, intBuffer);
-        if (intBuffer.get(0) == GL2.GL_FALSE) {
-            System.out.println("Error in vertex shader!");
-            System.exit(1);
-        }
+        gl3.glShaderSource(vertexShaderId, 1, vertexShaderSource , null);
+        gl3.glCompileShader(vertexShaderId);
 
-        intBuffer.rewind();
+        // Check Vertex Shader
+        IntBuffer vertexResult = IntBuffer.allocate(1);
+        IntBuffer vertexInfoLogLength = IntBuffer.allocate(1);
 
-        gl2.glGetShaderiv(fragmentShader, GL2.GL_COMPILE_STATUS, intBuffer);
-        if (intBuffer.get(0) == GL2.GL_FALSE) {
-            System.out.println("Error in fragment shader!");
-            System.exit(1);
-        }
+        gl3.glGetShaderiv(vertexShaderId, GL3.GL_COMPILE_STATUS, vertexResult);
+        gl3.glGetShaderiv(vertexShaderId, GL3.GL_INFO_LOG_LENGTH, vertexInfoLogLength);
 
-        program = gl2.glCreateProgram();
+        ByteBuffer vertexErrorMessage = ByteBuffer.allocate(vertexInfoLogLength.get(0));
+        gl3.glGetShaderInfoLog(vertexShaderId, vertexInfoLogLength.get(0), null, vertexErrorMessage);
+        System.out.println(new String(vertexErrorMessage.array()));
 
-        gl2.glAttachShader(program, vertexShader);
-        gl2.glAttachShader(program, fragmentShader);
+        // Compile Fragment Shader
+        System.out.println("Compiling fragment shader");
+        String fragmentShaderSource[] = {"#version 330 core\n" +
+                                        "out vec3 color;\n" +
+                                        "void main(){\n" +
+                                        "    color = vec3(1,0,0);\n" +
+                                        "}"};
+        gl3.glShaderSource(fragmentShaderId, 1, fragmentShaderSource, null);
+        gl3.glCompileShader(fragmentShaderId);
 
-        gl2.glLinkProgram(program);
+        // Check Fragment Shader
+        IntBuffer fragmentResult = IntBuffer.allocate(1);
+        IntBuffer fragmentInfoLogLength = IntBuffer.allocate(1);
 
-        intBuffer.rewind();
-        gl2.glGetProgramiv(program, GL2.GL_LINK_STATUS, intBuffer);
+        gl3.glGetShaderiv(fragmentShaderId, GL3.GL_COMPILE_STATUS, fragmentResult);
+        gl3.glGetShaderiv(fragmentShaderId, GL3.GL_INFO_LOG_LENGTH, fragmentInfoLogLength);
+        ByteBuffer fragmentErrorMessage = ByteBuffer.allocate(fragmentInfoLogLength.get(0));
+        gl3.glGetShaderInfoLog(fragmentShaderId, fragmentInfoLogLength.get(0), null, fragmentErrorMessage);
+        System.out.println(new String(fragmentErrorMessage.array()));
 
-        if (intBuffer.get(0) == GL2.GL_FALSE) {
-            System.out.println("Error in program linking!");
-            System.exit(1);
-        }
+        // Link the program
+        System.out.println("Linking program");
+        int programId = gl3.glCreateProgram();
+        gl3.glAttachShader(programId, vertexShaderId);
+        gl3.glAttachShader(programId, fragmentShaderId);
+        gl3.glLinkProgram(programId);
+
+        // Check the program
+        IntBuffer programResult = IntBuffer.allocate(1);
+        IntBuffer programInfoLogLength = IntBuffer.allocate(1);
+
+        gl3.glGetProgramiv(programId, GL3.GL_LINK_STATUS, programResult);
+        gl3.glGetProgramiv(programId, GL3.GL_INFO_LOG_LENGTH, programInfoLogLength);
+        ByteBuffer programErrorMessage = ByteBuffer.allocate(programInfoLogLength.get(0));
+        gl3.glGetProgramInfoLog(programId, programInfoLogLength.get(0), null, programErrorMessage);
+        System.out.println(new String(programErrorMessage.array()));
+
+        gl3.glDeleteShader(vertexShaderId);
+        gl3.glDeleteShader(fragmentShaderId);
+
+        return programId;
     }
 
     @Override
@@ -107,13 +142,24 @@ public class RenderLoop implements GLEventListener {
     }
 
     private void render(GLAutoDrawable drawable) {
-        GL2 gl = drawable.getGL().getGL2();
-        gl.glClearColor(0, 0, 0, 0);
-        gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+        GL3 gl3 = drawable.getGL().getGL3();
+
+        gl3.glClearColor(0, 0, 0.4f, 0);
+        gl3.glClear(GL3.GL_COLOR_BUFFER_BIT | GL3.GL_DEPTH_BUFFER_BIT);
+        gl3.glUseProgram(programId);
 
         //render objects here.
+        gl3.glEnableVertexAttribArray(0);
+        gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, vertexBufferId);
+        gl3.glVertexAttribPointer(0,    // no reason
+                                  3,    // number of vertices
+                                  GL3.GL_FLOAT,  // type
+                                  false, // normalized?
+                                  0,    // stride (Schrittweite)
+                                  0);
 
-
+        gl3.glDrawArrays(GL3.GL_TRIANGLES, 0, 3); // starting from 0, 3 vertices total
+        gl3.glDisableVertexAttribArray(0);
     }
 
     private void update(double deltaT) {
@@ -122,29 +168,29 @@ public class RenderLoop implements GLEventListener {
 
     @Override
     public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
-        // Get the OpenGL graphics context
-        GL2 gl = drawable.getGL().getGL2();
-
-        height = (height == 0) ? 1 : height;  // Prevent divide by zero
-        float aspect = (float) width / height; // Compute aspect ratio
-
-        // Set view port to cover full screen
-        gl.glViewport(0, 0, width, height);
-
-        // Set up the projection matrix - choose perspective view
-        gl.glMatrixMode(GLMatrixFunc.GL_PROJECTION);
-        gl.glLoadIdentity();    // reset
-        // Angle of view (fovy) is 45 degrees (in the up y-direction). Based on this
-        // canvas's aspect ratio. Clipping z-near is 0.1f and z-near is 100.0f.
-
-        GLU glu = new GLU();
-        glu.gluPerspective(75f, aspect, 0.1f, 100.0f); // fovy, aspect, zNear, zFar
-        glu.gluLookAt(0, 0, 100, // eye
-                0, 0, 0, // look-at
-                0, 1, 0); // up
-
-        // Switch to the model-view transform
-        gl.glMatrixMode(GLMatrixFunc.GL_MODELVIEW);
-        gl.glLoadIdentity();    // reset
+//        // Get the OpenGL graphics context
+//        GL2 gl = drawable.getGL().getGL2();
+//
+//        height = (height == 0) ? 1 : height;  // Prevent divide by zero
+//        float aspect = (float) width / height; // Compute aspect ratio
+//
+//        // Set view port to cover full screen
+//        gl.glViewport(0, 0, width, height);
+//
+//        // Set up the projection matrix - choose perspective view
+//        gl.glMatrixMode(GLMatrixFunc.GL_PROJECTION);
+//        gl.glLoadIdentity();    // reset
+//        // Angle of view (fovy) is 45 degrees (in the up y-direction). Based on this
+//        // canvas's aspect ratio. Clipping z-near is 0.1f and z-near is 100.0f.
+//
+//        GLU glu = new GLU();
+//        glu.gluPerspective(75f, aspect, 0.1f, 100.0f); // fovy, aspect, zNear, zFar
+//        glu.gluLookAt(0, 0, 100, // eye
+//                0, 0, 0, // look-at
+//                0, 1, 0); // up
+//
+//        // Switch to the model-view transform
+//        gl.glMatrixMode(GLMatrixFunc.GL_MODELVIEW);
+//        gl.glLoadIdentity();    // reset
     }
 }
