@@ -67,6 +67,7 @@ public class RenderLoop implements GLEventListener {
         String vertexShaderSource[] = {"#version 330 core\n" +
                 "in vec3 vertexPosition_modelspace;\n" +
                 "uniform mat4 MVP;\n" +
+
                 "void main(){\n" +
                 "   vec4 v = vec4(vertexPosition_modelspace,1);\n" +
                 "   gl_Position = MVP * v;\n" +
@@ -168,32 +169,33 @@ public class RenderLoop implements GLEventListener {
     private void update(GLAutoDrawable drawable, double deltaT) {
         PMVMatrix pmvMatrix = new PMVMatrix();
 
-        // init.
-        pmvMatrix.glMatrixMode(GLMatrixFunc.GL_PROJECTION);
-        pmvMatrix.glLoadIdentity();
-        pmvMatrix.glMatrixMode(GLMatrixFunc.GL_MODELVIEW);
-        pmvMatrix.glLoadIdentity();
-
         pmvMatrix.glMatrixMode(GLMatrixFunc.GL_MODELVIEW); //set to mv-matrix.
         pmvMatrix.glLoadIdentity();
         pmvMatrix.gluLookAt(4,3,3, // eye
                             0,0,0, // look-at
                             0,1,0); // up.
+        pmvMatrix.update();
+        System.out.println("ModelView: ");
+        System.out.println(PMVMatrix.matrixToString(new StringBuilder(), "%10.5f", pmvMatrix.glGetMatrixf()).toString());
 
+        pmvMatrix.glMatrixMode(GLMatrixFunc.GL_PROJECTION);
+        pmvMatrix.glLoadIdentity();
         pmvMatrix.gluPerspective(45,                                            //fov-y (angle)
                                 (float)Window.WIDTH / (float)Window.HEIGHT,     // aspect-ratio
                                 0.1f,                                           // z-near
                                 100f);                                          // z-far
-
         pmvMatrix.update();
+        System.out.println("Projection: ");
+        System.out.println(PMVMatrix.matrixToString(new StringBuilder(), "%10.5f", pmvMatrix.glGetMatrixf(GLMatrixFunc.GL_PROJECTION)).toString());
+
+//        This also works but "pollutes" the projection matrix with modelview data
+//        pmvMatrix.glMultMatrixf(pmvMatrix.glGetMatrixf(GLMatrixFunc.GL_MODELVIEW));
+        float[] pmv = new float[16];
+        pmvMatrix.multPMvMatrixf(pmv, 0);
 
         GL3 gl3 = drawable.getGL().getGL3();
-
         int matrixId = gl3.glGetUniformLocation(programId, "MVP");
-
-        System.out.println(pmvMatrix.matrixToString(new StringBuilder(), "%10.5f", pmvMatrix.glGetMatrixf()).toString());
-
-        gl3.glUniformMatrix4fv(matrixId, 1, false, pmvMatrix.glGetMatrixf());
+        gl3.glUniformMatrix4fv(matrixId, 1, false, pmv, 0);
     }
 
     @Override
