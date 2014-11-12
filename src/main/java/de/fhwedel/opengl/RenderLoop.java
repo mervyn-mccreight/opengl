@@ -1,11 +1,13 @@
 package de.fhwedel.opengl;
 
 import com.jogamp.common.nio.Buffers;
+import com.jogamp.opengl.util.PMVMatrix;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
+import javax.media.opengl.fixedfunc.GLMatrixFunc;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -19,7 +21,7 @@ public class RenderLoop implements GLEventListener {
     float vertexBufferData[] = {
             -1.0f, -1.0f, 0.0f,
             1.0f, -1.0f, 0.0f,
-            0.0f,  1.0f, 0.0f,
+            0.0f, 1.0f, 0.0f,
     };
     private int vertexBufferId;
     private int programId;
@@ -35,7 +37,7 @@ public class RenderLoop implements GLEventListener {
         System.out.println("GL_RENDERER: " + gl.glGetString(GL.GL_RENDERER));
         System.out.println("GL_VERSION: " + gl.glGetString(GL.GL_VERSION));
 
-        gl.setSwapInterval(1);
+        gl.setSwapInterval(1); // V-SYNC
         gl.glEnable(GL.GL_CULL_FACE);
 
         gl.glEnable(GL.GL_DEPTH_TEST);
@@ -63,13 +65,14 @@ public class RenderLoop implements GLEventListener {
 
         System.out.println("Compiling vertex shader");
         String vertexShaderSource[] = {"#version 330 core\n" +
-                                        "layout(location = 0) in vec3 vertexPosition_modelspace;\n" +
-                                        "void main(){\n" +
-                                        "   gl_Position.xyz = vertexPosition_modelspace;\n" +
-                                        "   gl_Position.w = 1.0;\n" +
-                                        "}"};
+                "in vec3 vertexPosition_modelspace;\n" +
+                "uniform mat4 MVP;\n" +
+                "void main(){\n" +
+                "   vec4 v = vec4(vertexPosition_modelspace,1);\n" +
+                "   gl_Position = MVP * v;\n" +
+                "}"};
 
-        gl3.glShaderSource(vertexShaderId, 1, vertexShaderSource , null);
+        gl3.glShaderSource(vertexShaderId, 1, vertexShaderSource, null);
         gl3.glCompileShader(vertexShaderId);
 
         // Check Vertex Shader
@@ -86,10 +89,10 @@ public class RenderLoop implements GLEventListener {
         // Compile Fragment Shader
         System.out.println("Compiling fragment shader");
         String fragmentShaderSource[] = {"#version 330 core\n" +
-                                        "out vec3 color;\n" +
-                                        "void main(){\n" +
-                                        "    color = vec3(1,0,0);\n" +
-                                        "}"};
+                "out vec3 color;\n" +
+                "void main(){\n" +
+                "    color = vec3(1,0,0);\n" +
+                "}"};
         gl3.glShaderSource(fragmentShaderId, 1, fragmentShaderSource, null);
         gl3.glCompileShader(fragmentShaderId);
 
@@ -137,7 +140,7 @@ public class RenderLoop implements GLEventListener {
         long deltaTime = thisTime - lastTime;
         this.lastTime = thisTime;
 
-        update(deltaTime / 1000.0d);
+        update(drawable, deltaTime / 1000.0d);
         render(drawable);
     }
 
@@ -152,18 +155,45 @@ public class RenderLoop implements GLEventListener {
         gl3.glEnableVertexAttribArray(0);
         gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, vertexBufferId);
         gl3.glVertexAttribPointer(0,    // no reason
-                                  3,    // number of vertices
-                                  GL3.GL_FLOAT,  // type
-                                  false, // normalized?
-                                  0,    // stride (Schrittweite)
-                                  0);
+                3,    // number of vertices
+                GL3.GL_FLOAT,  // type
+                false, // normalized?
+                0,    // stride (Schrittweite)
+                0);
 
         gl3.glDrawArrays(GL3.GL_TRIANGLES, 0, 3); // starting from 0, 3 vertices total
         gl3.glDisableVertexAttribArray(0);
     }
 
-    private void update(double deltaT) {
+    private void update(GLAutoDrawable drawable, double deltaT) {
+        PMVMatrix pmvMatrix = new PMVMatrix();
 
+        // init.
+        pmvMatrix.glMatrixMode(GLMatrixFunc.GL_PROJECTION);
+        pmvMatrix.glLoadIdentity();
+        pmvMatrix.glMatrixMode(GLMatrixFunc.GL_MODELVIEW);
+        pmvMatrix.glLoadIdentity();
+
+        pmvMatrix.glMatrixMode(GLMatrixFunc.GL_MODELVIEW); //set to mv-matrix.
+        pmvMatrix.glLoadIdentity();
+        pmvMatrix.gluLookAt(4,3,3, // eye
+                            0,0,0, // look-at
+                            0,1,0); // up.
+
+        pmvMatrix.gluPerspective(45,                                            //fov-y (angle)
+                                (float)Window.WIDTH / (float)Window.HEIGHT,     // aspect-ratio
+                                0.1f,                                           // z-near
+                                100f);                                          // z-far
+
+        pmvMatrix.update();
+
+        GL3 gl3 = drawable.getGL().getGL3();
+
+        int matrixId = gl3.glGetUniformLocation(programId, "MVP");
+
+        System.out.println(pmvMatrix.matrixToString(new StringBuilder(), "%10.5f", pmvMatrix.glGetMatrixf()).toString());
+
+        gl3.glUniformMatrix4fv(matrixId, 1, false, pmvMatrix.glGetMatrixf());
     }
 
     @Override
