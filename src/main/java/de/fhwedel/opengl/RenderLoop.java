@@ -254,6 +254,7 @@ public class RenderLoop implements GLEventListener {
 
         gl3.glDrawArrays(GL3.GL_TRIANGLES, 0, 12*3); // starting from 0, 12*3 vertices total
         gl3.glDisableVertexAttribArray(0);
+        gl3.glDisableVertexAttribArray(1);
     }
 
     private void update(GLAutoDrawable drawable, double deltaT) {
