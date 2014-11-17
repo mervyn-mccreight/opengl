@@ -2,6 +2,7 @@ package de.fhwedel.opengl;
 
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.PMVMatrix;
+import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureData;
 import com.jogamp.opengl.util.texture.TextureIO;
 
@@ -99,8 +100,9 @@ public class RenderLoop implements GLEventListener {
     private int programId;
     private int textureUVBufferId;
 
-    public static TextureData loadTexture(String file) throws GLException, IOException {
-        return TextureIO.newTextureData(GLProfile.getDefault(), new File(file), true, "bmp");
+    public static Texture loadTexture(String file) throws GLException, IOException {
+        TextureData textureData = TextureIO.newTextureData(GLProfile.getDefault(), new File(file), true, TextureIO.DDS);
+        return TextureIO.newTexture(textureData);
     }
 
     @Override
@@ -140,24 +142,26 @@ public class RenderLoop implements GLEventListener {
 
         programId = loadShaders(gl3);
 
-        IntBuffer textureIdBuffer = IntBuffer.allocate(1);
-        gl3.glGenTextures(1, textureIdBuffer);
-        int textureId = textureIdBuffer.get(0);
+//        IntBuffer textureIdBuffer = IntBuffer.allocate(1);
+//        gl3.glGenTextures(1, textureIdBuffer);
+//        int textureId = textureIdBuffer.get(0);
 
-        TextureData textureData = null;
+        Texture texture = null;
         try {
-            textureData = loadTexture("textures/cube.bmp");
+            texture = loadTexture("textures/cube.dds");
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(0);
         }
 
-        gl3.glBindTexture(GL3.GL_TEXTURE_2D, textureId);
-        gl3.glTexImage2D(GL3.GL_TEXTURE_2D, 0, GL3.GL_RGB, textureData.getWidth(), textureData.getHeight(), 0, GL3.GL_BGR, GL3.GL_UNSIGNED_BYTE, textureData.getBuffer());
+        texture.bind(gl3);
 
-        gl3.glTexParameteri(GL3.GL_TEXTURE_2D, GL3.GL_TEXTURE_MAG_FILTER, GL3.GL_LINEAR);
-        gl3.glTexParameteri(GL3.GL_TEXTURE_2D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_LINEAR_MIPMAP_LINEAR);
-        gl3.glGenerateMipmap(GL3.GL_TEXTURE_2D);
+//        gl3.glBindTexture(GL3.GL_TEXTURE_2D, textureId);
+//        gl3.glTexImage2D(GL3.GL_TEXTURE_2D, 0, GL3.GL_RGB, textureData.getWidth(), textureData.getHeight(), 0, GL3.GL_BGR, GL3.GL_UNSIGNED_BYTE, textureData.getBuffer());
+//
+//        gl3.glTexParameteri(GL3.GL_TEXTURE_2D, GL3.GL_TEXTURE_MAG_FILTER, GL3.GL_LINEAR);
+//        gl3.glTexParameteri(GL3.GL_TEXTURE_2D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_LINEAR_MIPMAP_LINEAR);
+//        gl3.glGenerateMipmap(GL3.GL_TEXTURE_2D);
     }
 
     private int loadShaders(GL3 gl3) {
