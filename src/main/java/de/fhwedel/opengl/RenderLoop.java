@@ -2,12 +2,13 @@ package de.fhwedel.opengl;
 
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.PMVMatrix;
+import com.jogamp.opengl.util.texture.TextureData;
+import com.jogamp.opengl.util.texture.TextureIO;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GL3;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLEventListener;
+import javax.media.opengl.*;
 import javax.media.opengl.fixedfunc.GLMatrixFunc;
+import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -54,49 +55,53 @@ public class RenderLoop implements GLEventListener {
             -1.0f, 1.0f, 1.0f,
             1.0f,-1.0f, 1.0f
     };
-    float colorBufferData[] = {
-            0.583f,  0.771f,  0.014f,
-            0.609f,  0.115f,  0.436f,
-            0.327f,  0.483f,  0.844f,
-            0.822f,  0.569f,  0.201f,
-            0.435f,  0.602f,  0.223f,
-            0.310f,  0.747f,  0.185f,
-            0.597f,  0.770f,  0.761f,
-            0.559f,  0.436f,  0.730f,
-            0.359f,  0.583f,  0.152f,
-            0.483f,  0.596f,  0.789f,
-            0.559f,  0.861f,  0.639f,
-            0.195f,  0.548f,  0.859f,
-            0.014f,  0.184f,  0.576f,
-            0.771f,  0.328f,  0.970f,
-            0.406f,  0.615f,  0.116f,
-            0.676f,  0.977f,  0.133f,
-            0.971f,  0.572f,  0.833f,
-            0.140f,  0.616f,  0.489f,
-            0.997f,  0.513f,  0.064f,
-            0.945f,  0.719f,  0.592f,
-            0.543f,  0.021f,  0.978f,
-            0.279f,  0.317f,  0.505f,
-            0.167f,  0.620f,  0.077f,
-            0.347f,  0.857f,  0.137f,
-            0.055f,  0.953f,  0.042f,
-            0.714f,  0.505f,  0.345f,
-            0.783f,  0.290f,  0.734f,
-            0.722f,  0.645f,  0.174f,
-            0.302f,  0.455f,  0.848f,
-            0.225f,  0.587f,  0.040f,
-            0.517f,  0.713f,  0.338f,
-            0.053f,  0.959f,  0.120f,
-            0.393f,  0.621f,  0.362f,
-            0.673f,  0.211f,  0.457f,
-            0.820f,  0.883f,  0.371f,
-            0.982f,  0.099f,  0.879f
+
+    float textureUVData[] = {
+            0.000059f, 0.000004f,
+            0.000103f, 0.336048f,
+            0.335973f, 0.335903f,
+            1.000000f, 0.000013f,
+            0.667979f, 0.335851f,
+            0.999958f, 0.336064f,
+            0.667979f, 0.335851f,
+            0.336024f, 0.671877f,
+            0.667969f, 0.671889f,
+            1.000000f, 0.000013f,
+            0.668104f, 0.000013f,
+            0.667979f, 0.335851f,
+            0.000059f, 0.000004f,
+            0.335973f, 0.335903f,
+            0.336098f, 0.000071f,
+            0.667979f, 0.335851f,
+            0.335973f, 0.335903f,
+            0.336024f, 0.671877f,
+            1.000000f, 0.671847f,
+            0.999958f, 0.336064f,
+            0.667979f, 0.335851f,
+            0.668104f, 0.000013f,
+            0.335973f, 0.335903f,
+            0.667979f, 0.335851f,
+            0.335973f, 0.335903f,
+            0.668104f, 0.000013f,
+            0.336098f, 0.000071f,
+            0.000103f, 0.336048f,
+            0.000004f, 0.671870f,
+            0.336024f, 0.671877f,
+            0.000103f, 0.336048f,
+            0.336024f, 0.671877f,
+            0.335973f, 0.335903f,
+            0.667969f, 0.671889f,
+            1.000000f, 0.671847f,
+            0.667979f, 0.335851f
     };
     private long lastTime = System.currentTimeMillis();
     private int vertexBufferId;
     private int programId;
-    private int colorBufferId;
+    private int textureUVBufferId;
 
+    public static TextureData loadTexture(String file) throws GLException, IOException {
+        return TextureIO.newTextureData(GLProfile.getDefault(), new File(file), true, "bmp");
+    }
 
     @Override
     public void init(GLAutoDrawable drawable) {
@@ -127,13 +132,32 @@ public class RenderLoop implements GLEventListener {
         gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, vertexBufferId);
         gl3.glBufferData(GL3.GL_ARRAY_BUFFER, vertexBufferData.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(vertexBufferData), GL3.GL_STATIC_DRAW);
 
-        IntBuffer colorBuffer = IntBuffer.allocate(1);
-        gl3.glGenBuffers(1, colorBuffer);
-        colorBufferId = colorBuffer.get(0);
-        gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, colorBufferId);
-        gl3.glBufferData(GL3.GL_ARRAY_BUFFER, colorBufferData.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(colorBufferData), GL3.GL_STATIC_DRAW);
+        IntBuffer textureUVBuffer = IntBuffer.allocate(1);
+        gl3.glGenBuffers(1, textureUVBuffer);
+        textureUVBufferId = textureUVBuffer.get(0);
+        gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, textureUVBufferId);
+        gl3.glBufferData(GL3.GL_ARRAY_BUFFER, textureUVData.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(textureUVData), GL3.GL_STATIC_DRAW);
 
         programId = loadShaders(gl3);
+
+        IntBuffer textureIdBuffer = IntBuffer.allocate(1);
+        gl3.glGenTextures(1, textureIdBuffer);
+        int textureId = textureIdBuffer.get(0);
+
+        TextureData textureData = null;
+        try {
+            textureData = loadTexture("textures/cube.bmp");
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(0);
+        }
+
+        gl3.glBindTexture(GL3.GL_TEXTURE_2D, textureId);
+        gl3.glTexImage2D(GL3.GL_TEXTURE_2D, 0, GL3.GL_RGB, textureData.getWidth(), textureData.getHeight(), 0, GL3.GL_BGR, GL3.GL_UNSIGNED_BYTE, textureData.getBuffer());
+
+        gl3.glTexParameteri(GL3.GL_TEXTURE_2D, GL3.GL_TEXTURE_MAG_FILTER, GL3.GL_LINEAR);
+        gl3.glTexParameteri(GL3.GL_TEXTURE_2D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_LINEAR_MIPMAP_LINEAR);
+        gl3.glGenerateMipmap(GL3.GL_TEXTURE_2D);
     }
 
     private int loadShaders(GL3 gl3) {
@@ -143,14 +167,14 @@ public class RenderLoop implements GLEventListener {
         System.out.println("Compiling vertex shader");
         String vertexShaderSource[] = {"#version 330 core\n" +
                 "in vec3 vertexPosition_modelspace;\n" +
-                "layout(location = 1) in vec3 vertexColor;\n" +
-                "out vec3 fragmentColor;\n" +
+                "layout(location = 1) in vec2 vertexUV;\n" +
+                "out vec2 UV;\n" +
                 "uniform mat4 MVP;\n" +
 
                 "void main(){\n" +
                 "   vec4 v = vec4(vertexPosition_modelspace,1);\n" +
                 "   gl_Position = MVP * v;\n" +
-                "   fragmentColor = vertexColor;\n" +
+                "   UV = vertexUV;\n" +
                 "}"};
 
         gl3.glShaderSource(vertexShaderId, 1, vertexShaderSource, null);
@@ -170,10 +194,11 @@ public class RenderLoop implements GLEventListener {
         // Compile Fragment Shader
         System.out.println("Compiling fragment shader");
         String fragmentShaderSource[] = {"#version 330 core\n" +
-                "in vec3 fragmentColor;\n" +
+                "in vec2 UV;\n" +
                 "out vec3 color;\n" +
+                "uniform sampler2D myTextureSampler;\n" +
                 "void main(){\n" +
-                "    color = fragmentColor;\n" +
+                "    color = texture( myTextureSampler, UV ).rgb;\n" +
                 "}"};
         gl3.glShaderSource(fragmentShaderId, 1, fragmentShaderSource, null);
         gl3.glCompileShader(fragmentShaderId);
@@ -244,9 +269,9 @@ public class RenderLoop implements GLEventListener {
                 0);   // offset
 
         gl3.glEnableVertexAttribArray(1);
-        gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, colorBufferId);
+        gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, textureUVBufferId);
         gl3.glVertexAttribPointer(1,
-                3,
+                2,
                 GL3.GL_FLOAT,
                 false,
                 0,
