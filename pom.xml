@@ -30,6 +30,12 @@
             <artifactId>joal-main</artifactId>
             <version>2.2.4</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>18.0</version>
+        </dependency>
+
     </dependencies>
 
 </project>

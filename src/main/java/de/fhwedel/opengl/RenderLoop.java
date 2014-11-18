@@ -1,6 +1,7 @@
 package de.fhwedel.opengl;
 
 import com.jogamp.common.nio.Buffers;
+import com.jogamp.opengl.math.VectorUtil;
 import com.jogamp.opengl.util.PMVMatrix;
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureData;
@@ -13,12 +14,13 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.Arrays;
 
 
 public class RenderLoop implements GLEventListener {
 
     // An array of 3 vectors which represents 3 vertices
-    float vertexBufferData[] = {
+    private float vertexBufferData[] = {
             -1.0f,-1.0f,-1.0f, // triangle 1 : begin
             -1.0f,-1.0f, 1.0f,
             -1.0f, 1.0f, 1.0f, // triangle 1 : end
@@ -57,7 +59,7 @@ public class RenderLoop implements GLEventListener {
             1.0f,-1.0f, 1.0f
     };
 
-    float textureUVData[] = {
+    private float textureUVData[] = {
             0.000059f, 0.000004f,
             0.000103f, 0.336048f,
             0.335973f, 0.335903f,
@@ -95,10 +97,12 @@ public class RenderLoop implements GLEventListener {
             1.000000f, 0.671847f,
             0.667979f, 0.335851f
     };
+
     private long lastTime = System.currentTimeMillis();
     private int vertexBufferId;
     private int programId;
     private int textureUVBufferId;
+    private int normalBufferId;
 
     public static Texture loadTexture(String file) throws GLException, IOException {
         TextureData textureData = TextureIO.newTextureData(GLProfile.getDefault(), new File(file), true, TextureIO.DDS);
@@ -107,6 +111,9 @@ public class RenderLoop implements GLEventListener {
 
     @Override
     public void init(GLAutoDrawable drawable) {
+
+        // System.out.println(Arrays.toString(TrianglePack.fromVertexArray(vertexBufferData).normalArray()));
+
         GL gl = drawable.getGL();
 
         System.out.println("Chosen GLCapabilities: " + drawable.getChosenGLCapabilities());
@@ -139,6 +146,14 @@ public class RenderLoop implements GLEventListener {
         textureUVBufferId = textureUVBuffer.get(0);
         gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, textureUVBufferId);
         gl3.glBufferData(GL3.GL_ARRAY_BUFFER, textureUVData.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(textureUVData), GL3.GL_STATIC_DRAW);
+
+        IntBuffer normalBuffer = IntBuffer.allocate(1);
+        gl3.glGenBuffers(1, normalBuffer);
+        normalBufferId = normalBuffer.get();
+        float[] normalArray = TrianglePack.fromVertexArray(vertexBufferData).normalArray();
+        gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, normalBufferId);
+        gl3.glBufferData(GL3.GL_ARRAY_BUFFER, normalArray.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(normalArray), GL3.GL_STATIC_DRAW);
+
 
         programId = loadShaders(gl3);
 
@@ -173,11 +188,25 @@ public class RenderLoop implements GLEventListener {
                 "in vec3 vertexPosition_modelspace;\n" +
                 "layout(location = 1) in vec2 vertexUV;\n" +
                 "out vec2 UV;\n" +
+                "out vec3 Position_worldspace;" +
+                "out vec3 EyeDirection_cameraspace;" +
+                "out vec3 LightPosition_cameraspace;" +
+                "out vec3 LightDirection_cameraspace;" +
                 "uniform mat4 MVP;\n" +
+                "uniform LightPosition_worldspace;" +
 
                 "void main(){\n" +
-                "   vec4 v = vec4(vertexPosition_modelspace,1);\n" +
-                "   gl_Position = MVP * v;\n" +
+                "   gl_Position = MVP * vec4(vertexPosition_modelspace,1);\n" +
+
+                "   Position_worldspace = (M * vec4(vertexPosition_modelspace,1)).xyz;" +
+
+                "   vec3 vertexPosition_cameraspace = ( V * M * vec4(vertexPosition_modelspace,1)).xyz;" +
+                "   EyeDirection_cameraspace = vec3(0,0,0) - vertexPosition_cameraspace;" +
+
+                "   vec3 LightPosition_cameraspace = ( V * vec4(LightPosition_worldspace,1)).xyz;" +
+                "   LightDirection_cameraspace = LightPosition_cameraspace + EyeDirection_cameraspace;" +
+
+                "   Normal_cameraspace = ( V * M * vec4(vertexNormal_modelspace,0)).xyz;" +
                 "   UV = vertexUV;\n" +
                 "}"};
 
@@ -201,8 +230,12 @@ public class RenderLoop implements GLEventListener {
                 "in vec2 UV;\n" +
                 "out vec3 color;\n" +
                 "uniform sampler2D myTextureSampler;\n" +
+                " vec3 n = normalize( Normal_cameraspace );\n" +
+                " vec3 l = normalize( LightDirection_cameraspace );" +
+                "float cosTheta = clamp( dot( n,l ), 0,1 );" +
                 "void main(){\n" +
-                "    color = texture( myTextureSampler, UV ).rgb;\n" +
+                "   vec3 MaterialDiffuseColor = texture( myTextureSampler, UV ).rgb;" +
+                "   color = MaterialDiffuseColor * LightColor * LightPower * cosTheta / (distance*distance);" +
                 "}"};
         gl3.glShaderSource(fragmentShaderId, 1, fragmentShaderSource, null);
         gl3.glCompileShader(fragmentShaderId);
@@ -276,6 +309,15 @@ public class RenderLoop implements GLEventListener {
         gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, textureUVBufferId);
         gl3.glVertexAttribPointer(1,
                 2,
+                GL3.GL_FLOAT,
+                false,
+                0,
+                0);
+
+        gl3.glEnableVertexAttribArray(2);
+        gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, normalBufferId);
+        gl3.glVertexAttribPointer(2,
+                3,
                 GL3.GL_FLOAT,
                 false,
                 0,
