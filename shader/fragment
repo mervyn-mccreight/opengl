@@ -1,0 +1,16 @@
+#version 330 core
+in vec2 UV;
+in vec3 Normal_cameraspace;
+in vec3 LightDirection_cameraspace;
+out vec3 color;
+uniform sampler2D myTextureSampler;
+uniform vec3 LightColor;
+uniform vec3 LightPower;
+vec3 n = normalize( Normal_cameraspace );
+vec3 l = normalize( LightDirection_cameraspace );
+float cosTheta = clamp( dot( n,l ), 0,1 );
+
+void main(){
+    vec3 MaterialDiffuseColor = texture(myTextureSampler, UV).rgb;
+    color = MaterialDiffuseColor * LightColor * LightPower * cosTheta / (distance*distance);
+}

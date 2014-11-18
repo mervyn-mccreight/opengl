@@ -182,38 +182,38 @@ public class RenderLoop implements GLEventListener {
         int fragmentShaderId = gl3.glCreateShader(GL3.GL_FRAGMENT_SHADER);
 
         System.out.println("Compiling vertex shader");
-        String vertexShaderSource[] = {"#version 330 core\n" +
-                "in vec3 vertexPosition_modelspace;\n" +
-                "in vec3 vertexNormal_modelspace;\n" +
-                "layout(location = 1) in vec2 vertexUV;\n" +
-                "out vec2 UV;\n" +
-                "out vec3 Position_worldspace;" +
-                "out vec3 EyeDirection_cameraspace;" +
-                "out vec3 LightPosition_cameraspace;" +
-                "out vec3 LightDirection_cameraspace;" +
-                "out vec3 Normal_cameraspace;" +
-                "uniform mat4 M;\n" +
-                "uniform mat4 V;\n" +
-                "uniform mat4 P;\n" +
-                "uniform vec3 LightPosition_worldspace;\n" +
+//        String vertexShaderSource[] = {"#version 330 core\n" +
+//                "in vec3 vertexPosition_modelspace;\n" +
+//                "in vec3 vertexNormal_modelspace;\n" +
+//                "layout(location = 1) in vec2 vertexUV;\n" +
+//                "out vec2 UV;\n" +
+//                "out vec3 Position_worldspace;" +
+//                "out vec3 EyeDirection_cameraspace;" +
+//                "out vec3 LightPosition_cameraspace;" +
+//                "out vec3 LightDirection_cameraspace;" +
+//                "out vec3 Normal_cameraspace;" +
+//                "uniform mat4 M;\n" +
+//                "uniform mat4 V;\n" +
+//                "uniform mat4 P;\n" +
+//                "uniform vec3 LightPosition_worldspace;\n" +
+//
+//                "void main(){\n" +
+//                "   mat4 MVP = P * V * M;" +
+//                "   gl_Position = MVP * vec4(vertexPosition_modelspace,1);\n" +
+//
+//                "   Position_worldspace = (M * vec4(vertexPosition_modelspace,1)).xyz;" +
+//
+//                "   vec3 vertexPosition_cameraspace = ( V * M * vec4(vertexPosition_modelspace,1)).xyz;" +
+//                "   EyeDirection_cameraspace = vec3(0,0,0) - vertexPosition_cameraspace;" +
+//
+//                "   vec3 LightPosition_cameraspace = ( V * vec4(LightPosition_worldspace,1)).xyz;" +
+//                "   LightDirection_cameraspace = LightPosition_cameraspace + EyeDirection_cameraspace;" +
+//
+//                "   Normal_cameraspace = ( V * M * vec4(vertexNormal_modelspace,0)).xyz;" +
+//                "   UV = vertexUV;\n" +
+//                "}"};
 
-                "void main(){\n" +
-                "   mat4 MVP = P * V * M;" +
-                "   gl_Position = MVP * vec4(vertexPosition_modelspace,1);\n" +
-
-                "   Position_worldspace = (M * vec4(vertexPosition_modelspace,1)).xyz;" +
-
-                "   vec3 vertexPosition_cameraspace = ( V * M * vec4(vertexPosition_modelspace,1)).xyz;" +
-                "   EyeDirection_cameraspace = vec3(0,0,0) - vertexPosition_cameraspace;" +
-
-                "   vec3 LightPosition_cameraspace = ( V * vec4(LightPosition_worldspace,1)).xyz;" +
-                "   LightDirection_cameraspace = LightPosition_cameraspace + EyeDirection_cameraspace;" +
-
-                "   Normal_cameraspace = ( V * M * vec4(vertexNormal_modelspace,0)).xyz;" +
-                "   UV = vertexUV;\n" +
-                "}"};
-
-        gl3.glShaderSource(vertexShaderId, 1, vertexShaderSource, null);
+        gl3.glShaderSource(vertexShaderId, 1, ShaderCodeLoader.readSourceFile("shader/vertex"), null);
         gl3.glCompileShader(vertexShaderId);
 
         // Check Vertex Shader
@@ -229,21 +229,23 @@ public class RenderLoop implements GLEventListener {
 
         // Compile Fragment Shader
         System.out.println("Compiling fragment shader");
-        String fragmentShaderSource[] = {"#version 330 core\n" +
-                "in vec2 UV;\n" +
-                "in vec3 Normal_cameraspace;" +
-                "in vec3 LightDirection_cameraspace" +
-                "out vec3 color;\n" +
-                "uniform sampler2D myTextureSampler;\n" +
-                "vec3 n = normalize( Normal_cameraspace );\n" +
-                "vec3 l = normalize( LightDirection_cameraspace );" +
-                "float cosTheta = clamp( dot( n,l ), 0,1 );" +
-
-                "void main(){\n" +
-                "   vec3 MaterialDiffuseColor = texture( myTextureSampler, UV ).rgb;" +
-                "   color = MaterialDiffuseColor * LightColor * LightPower * cosTheta / (distance*distance);" +
-                "}"};
-        gl3.glShaderSource(fragmentShaderId, 1, fragmentShaderSource, null);
+//        String fragmentShaderSource[] = {"#version 330 core\n" +
+//                "in vec2 UV;\n" +
+//                "in vec3 Normal_cameraspace;\n" +
+//                "in vec3 LightDirection_cameraspace;\n" +
+//                "out vec3 color;\n" +
+//                "uniform sampler2D myTextureSampler;\n" +
+//                "uniform vec3 LightColor;\n" +
+//                "uniform vec3 LightPower;\n" +
+//                "vec3 n = normalize( Normal_cameraspace );\n" +
+//                "vec3 l = normalize( LightDirection_cameraspace );\n" +
+//                "float cosTheta = clamp( dot( n,l ), 0,1 );\n" +
+//
+//                "void main(){\n" +
+//                "   vec3 MaterialDiffuseColor = texture(myTextureSampler, UV).rgb;\n" +
+//                "   color = MaterialDiffuseColor * LightColor * LightPower * cosTheta / (distance*distance);\n" +
+//                "}"};
+        gl3.glShaderSource(fragmentShaderId, 1, ShaderCodeLoader.readSourceFile("shader/fragment"), null);
         gl3.glCompileShader(fragmentShaderId);
 
         // Check Fragment Shader
