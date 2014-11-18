@@ -17,7 +17,7 @@ public class ShaderCodeLoader {
                 codeInOneString += line + "\n";
             }
 
-            System.out.println(String.format("content of %s:\n%s", pathToSource, codeInOneString));
+//            System.out.println(String.format("content of %s:\n%s", pathToSource, codeInOneString));
 
         } catch (IOException e) {
             System.err.println("could not read file: " + pathToSource);
