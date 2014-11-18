@@ -1,7 +1,6 @@
 package de.fhwedel.opengl;
 
 import com.jogamp.common.nio.Buffers;
-import com.jogamp.opengl.math.VectorUtil;
 import com.jogamp.opengl.util.PMVMatrix;
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureData;
@@ -14,7 +13,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.Arrays;
 
 
 public class RenderLoop implements GLEventListener {
@@ -186,16 +184,21 @@ public class RenderLoop implements GLEventListener {
         System.out.println("Compiling vertex shader");
         String vertexShaderSource[] = {"#version 330 core\n" +
                 "in vec3 vertexPosition_modelspace;\n" +
+                "in vec3 vertexNormal_modelspace;\n" +
                 "layout(location = 1) in vec2 vertexUV;\n" +
                 "out vec2 UV;\n" +
                 "out vec3 Position_worldspace;" +
                 "out vec3 EyeDirection_cameraspace;" +
                 "out vec3 LightPosition_cameraspace;" +
                 "out vec3 LightDirection_cameraspace;" +
-                "uniform mat4 MVP;\n" +
-                "uniform LightPosition_worldspace;" +
+                "out vec3 Normal_cameraspace;" +
+                "uniform mat4 M;\n" +
+                "uniform mat4 V;\n" +
+                "uniform mat4 P;\n" +
+                "uniform vec3 LightPosition_worldspace;\n" +
 
                 "void main(){\n" +
+                "   mat4 MVP = P * V * M;" +
                 "   gl_Position = MVP * vec4(vertexPosition_modelspace,1);\n" +
 
                 "   Position_worldspace = (M * vec4(vertexPosition_modelspace,1)).xyz;" +
@@ -228,11 +231,14 @@ public class RenderLoop implements GLEventListener {
         System.out.println("Compiling fragment shader");
         String fragmentShaderSource[] = {"#version 330 core\n" +
                 "in vec2 UV;\n" +
+                "in vec3 Normal_cameraspace;" +
+                "in vec3 LightDirection_cameraspace" +
                 "out vec3 color;\n" +
                 "uniform sampler2D myTextureSampler;\n" +
-                " vec3 n = normalize( Normal_cameraspace );\n" +
-                " vec3 l = normalize( LightDirection_cameraspace );" +
+                "vec3 n = normalize( Normal_cameraspace );\n" +
+                "vec3 l = normalize( LightDirection_cameraspace );" +
                 "float cosTheta = clamp( dot( n,l ), 0,1 );" +
+
                 "void main(){\n" +
                 "   vec3 MaterialDiffuseColor = texture( myTextureSampler, UV ).rgb;" +
                 "   color = MaterialDiffuseColor * LightColor * LightPower * cosTheta / (distance*distance);" +
