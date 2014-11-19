@@ -13,8 +13,4 @@
         <module>opengl</module>
         <module>jglm</module>
     </modules>
-
-
-
-
 </project>
