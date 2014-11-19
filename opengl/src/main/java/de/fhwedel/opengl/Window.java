@@ -46,7 +46,7 @@ public class Window {
             }
         });
 
-        window.addGLEventListener(new RenderLoop());
+        window.addGLEventListener(new RenderLoop(new Input(window)));
 
         window.setSize(WIDTH, HEIGHT);
         window.setTitle(TITLE);

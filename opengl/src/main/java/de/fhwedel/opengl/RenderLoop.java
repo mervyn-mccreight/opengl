@@ -103,6 +103,11 @@ public class RenderLoop implements GLEventListener {
     private int programId;
     private int textureUVBufferId;
     private int normalBufferId;
+    private Input input;
+
+    public RenderLoop(Input input) {
+        this.input = input;
+    }
 
     public static Texture loadTexture(String file) throws GLException, IOException {
         TextureData textureData = TextureIO.newTextureData(GLProfile.getDefault(), new File(file), true, TextureIO.DDS);
@@ -282,7 +287,7 @@ public class RenderLoop implements GLEventListener {
     private void update(GLAutoDrawable drawable, double deltaT) {
         Mat4 model = Mat4.MAT4_IDENTITY;
 
-        Mat4 view = Matrices.lookAt(new Vec3(4, 3, 3), // eye
+        Mat4 view = Matrices.lookAt(input.getEye(), // eye
                 new Vec3(0, 0, 0), // lookat
                 new Vec3(0, 1, 0) // up.
         );
