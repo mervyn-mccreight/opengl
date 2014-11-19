@@ -1,0 +1,30 @@
+#version 330 core
+
+in vec2 UV;
+in vec3 Normal_cameraspace;
+in vec3 LightDirection_cameraspace;
+in vec3 EyeDirection_cameraspace;
+in float distance;
+
+out vec3 color;
+
+uniform sampler2D myTextureSampler;
+uniform vec3 LightColor;
+uniform float LightPower;
+
+uniform vec3 MaterialAmbientComponent;
+uniform vec4 MaterialSpecularComponent;
+
+void main(){
+    vec3 E = normalize(EyeDirection_cameraspace);
+    vec3 n = normalize( Normal_cameraspace );
+    vec3 l = normalize( LightDirection_cameraspace );
+    vec3 R = reflect(-l, n);
+    float cosAlpha = clamp( dot(E, R), 0, 1);
+    float cosTheta = clamp( dot( n,l ), 0,1 );
+
+    vec3 MaterialDiffuseColor = texture(myTextureSampler, UV).rgb * LightColor * LightPower * cosTheta / (distance*distance);
+    vec3 MaterialAmbientColor = MaterialAmbientComponent * texture(myTextureSampler, UV).rgb;
+    vec3 MaterialSpecularColor = MaterialSpecularComponent.xyz * LightPower * pow(cosAlpha, MaterialSpecularComponent.w) / (distance*distance);
+    color = MaterialAmbientColor + MaterialDiffuseColor + MaterialSpecularColor;
+}

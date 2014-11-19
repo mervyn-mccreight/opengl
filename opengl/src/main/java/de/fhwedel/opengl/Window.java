@@ -12,9 +12,9 @@ import javax.media.opengl.GLProfile;
 
 public class Window {
 
-    private static final String TITLE = "Test Fenster";
     public static final int WIDTH = 640;
     public static final int HEIGHT = 480;
+    private static final String TITLE = "Test Fenster";
 
     public static void main(String[] args) {
         GLProfile glp = GLProfile.getDefault();

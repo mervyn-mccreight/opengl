@@ -2,13 +2,10 @@ package de.fhwedel.opengl;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
 import com.jogamp.opengl.math.VectorUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.Vector;
 
 public class TrianglePack extends ArrayList<Triangle> {
 
@@ -16,15 +13,6 @@ public class TrianglePack extends ArrayList<Triangle> {
 
     private TrianglePack(float[] vertexArray) {
         this.vertexArray = vertexArray;
-    }
-
-    private List<Triangle> containingVertex(final float[] v0) {
-       return FluentIterable.from(this).filter(new Predicate<Triangle>() {
-            @Override
-            public boolean apply(Triangle triangle) {
-                return triangle.hasVertex(v0);
-            }
-        }).toList();
     }
 
     public static TrianglePack fromVertexArray(float[] vertexArray) {
@@ -43,6 +31,15 @@ public class TrianglePack extends ArrayList<Triangle> {
         }
 
         return pack;
+    }
+
+    private List<Triangle> containingVertex(final float[] v0) {
+       return FluentIterable.from(this).filter(new Predicate<Triangle>() {
+            @Override
+            public boolean apply(Triangle triangle) {
+                return triangle.hasVertex(v0);
+            }
+        }).toList();
     }
 
     public float[] normalArray() {

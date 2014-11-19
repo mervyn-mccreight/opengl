@@ -1,0 +1,3 @@
+[submodule "jglm"]
+	path = jglm
+	url = https://github.com/jroyalty/jglm.git
