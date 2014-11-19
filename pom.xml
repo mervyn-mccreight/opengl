@@ -11,6 +11,6 @@
 
     <modules>
         <module>opengl</module>
-        <module>jglm</module>
+        <module>jglm-master</module>
     </modules>
 </project>
