@@ -37,7 +37,7 @@ public class HeightField {
         return columnArray[i][j];
     }
 
-    public void update(long deltaT) {
+    public void update(double deltaT) {
         for (int j = 0; j < DIMENSION; j++) {
             for (int i = 0; i < DIMENSION; i++) {
                 Column center = getColumn(mColumns, i, j);
@@ -49,9 +49,9 @@ public class HeightField {
                 double f = SPEED * SPEED * (left.height + right.height + top.height + bottom.height - 4*center.height) / (COLUMN_WIDTH * COLUMN_WIDTH);
 
 
-                center.velocity += f * deltaT / 1000f;
+                center.velocity += f * deltaT;
                 Column newColumn = getColumn(mNewColumns, i, j);
-                newColumn.height = center.height + center.velocity * deltaT / 1000f;
+                newColumn.height = center.height + center.velocity * deltaT;
 
             }
         }

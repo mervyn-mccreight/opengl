@@ -19,6 +19,7 @@ import java.nio.IntBuffer;
 
 public class RenderLoop implements GLEventListener {
 
+    private final HeightField heightField;
     // An array of 3 vectors which represents 3 vertices
     private float vertexBufferData[] = {
             -1.0f,-1.0f,-1.0f, // triangle 1 : begin
@@ -103,6 +104,10 @@ public class RenderLoop implements GLEventListener {
     private int programId;
     private int textureUVBufferId;
     private int normalBufferId;
+
+    public RenderLoop() {
+        heightField = new HeightField();
+    }
 
     public static Texture loadTexture(String file) throws GLException, IOException {
         TextureData textureData = TextureIO.newTextureData(GLProfile.getDefault(), new File(file), true, TextureIO.DDS);
@@ -280,6 +285,9 @@ public class RenderLoop implements GLEventListener {
     }
 
     private void update(GLAutoDrawable drawable, double deltaT) {
+
+        heightField.update(deltaT);
+
         Mat4 model = Mat4.MAT4_IDENTITY;
 
         Mat4 view = Matrices.lookAt(new Vec3(4, 3, 3), // eye
