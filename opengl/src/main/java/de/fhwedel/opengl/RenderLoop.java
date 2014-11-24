@@ -133,15 +133,7 @@ public class RenderLoop implements GLEventListener {
 
         GL3 gl3 = gl.getGL3();
 
-        IntBuffer vertexArrayId = IntBuffer.allocate(1);
-        gl3.glGenVertexArrays(1, vertexArrayId);
-        gl3.glBindVertexArray(vertexArrayId.get(0));
 
-        IntBuffer vertexBuffer = IntBuffer.allocate(1);
-        gl3.glGenBuffers(1, vertexBuffer);
-        vertexBufferId = vertexBuffer.get(0);
-        gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, vertexBufferId);
-        gl3.glBufferData(GL3.GL_ARRAY_BUFFER, vertexBufferData.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(vertexBufferData), GL3.GL_STATIC_DRAW);
 
         IntBuffer textureUVBuffer = IntBuffer.allocate(1);
         gl3.glGenBuffers(1, textureUVBuffer);
@@ -149,12 +141,7 @@ public class RenderLoop implements GLEventListener {
         gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, textureUVBufferId);
         gl3.glBufferData(GL3.GL_ARRAY_BUFFER, textureUVData.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(textureUVData), GL3.GL_STATIC_DRAW);
 
-        IntBuffer normalBuffer = IntBuffer.allocate(1);
-        gl3.glGenBuffers(1, normalBuffer);
-        normalBufferId = normalBuffer.get();
-        float[] normalArray = TrianglePack.fromVertexArray(vertexBufferData).normalArray();
-        gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, normalBufferId);
-        gl3.glBufferData(GL3.GL_ARRAY_BUFFER, normalArray.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(normalArray), GL3.GL_STATIC_DRAW);
+
 
 
         programId = loadShaders(gl3);
@@ -246,6 +233,23 @@ public class RenderLoop implements GLEventListener {
     private void render(GLAutoDrawable drawable) {
         GL3 gl3 = drawable.getGL().getGL3();
 
+        float[] vertexArray = heightField.getVertexArray();
+
+        IntBuffer vertexBuffer = IntBuffer.allocate(1);
+        gl3.glGenBuffers(1, vertexBuffer);
+        vertexBufferId = vertexBuffer.get(0);
+        gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, vertexBufferId);
+        gl3.glBufferData(GL3.GL_ARRAY_BUFFER, vertexArray.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(vertexArray), GL3.GL_DYNAMIC_DRAW);
+
+        float[] normalArray = heightField.getNormals();
+//        float[] normalArray = new float[vertexArray.length];
+
+        IntBuffer normalBuffer = IntBuffer.allocate(1);
+        gl3.glGenBuffers(1, normalBuffer);
+        normalBufferId = normalBuffer.get();
+        gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, normalBufferId);
+        gl3.glBufferData(GL3.GL_ARRAY_BUFFER, normalArray.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(normalArray), GL3.GL_DYNAMIC_DRAW);
+
         gl3.glClearColor(0, 0, 0.4f, 0);
         gl3.glClear(GL3.GL_COLOR_BUFFER_BIT | GL3.GL_DEPTH_BUFFER_BIT);
         gl3.glUseProgram(programId);
@@ -278,7 +282,7 @@ public class RenderLoop implements GLEventListener {
                 0,
                 0);
 
-        gl3.glDrawArrays(GL3.GL_TRIANGLES, 0, 12*3); // starting from 0, 12*3 vertices total
+        gl3.glDrawArrays(GL3.GL_TRIANGLES, 0, vertexArray.length / 3); // starting from 0, 12*3 vertices total
         gl3.glDisableVertexAttribArray(0);
         gl3.glDisableVertexAttribArray(1);
         gl3.glDisableVertexAttribArray(2);
@@ -290,7 +294,7 @@ public class RenderLoop implements GLEventListener {
 
         Mat4 model = Mat4.MAT4_IDENTITY;
 
-        Mat4 view = Matrices.lookAt(new Vec3(4, 3, 3), // eye
+        Mat4 view = Matrices.lookAt(new Vec3(40, 80, 30), // eye
                 new Vec3(0, 0, 0), // lookat
                 new Vec3(0, 1, 0) // up.
         );
@@ -312,13 +316,13 @@ public class RenderLoop implements GLEventListener {
         gl3.glUniformMatrix4fv(projectionId, 1, false, projection.getBuffer());
 
         int lightPositionId = gl3.glGetUniformLocation(programId, "LightPosition_worldspace");
-        gl3.glUniform3fv(lightPositionId, 1, new Vec3(8, 6, 6).getBuffer());
+        gl3.glUniform3fv(lightPositionId, 1, new Vec3(0, 30, 0).getBuffer());
 
         int lightColorId = gl3.glGetUniformLocation(programId, "LightColor");
         gl3.glUniform3fv(lightColorId, 1, new Vec3(1, 1, 1f).getBuffer());
 
         int lightPowerId = gl3.glGetUniformLocation(programId, "LightPower");
-        gl3.glUniform1f(lightPowerId, 80f);
+        gl3.glUniform1f(lightPowerId, 200f);
 
         int materialAmbientColorId = gl3.glGetUniformLocation(programId, "MaterialAmbientComponent");
         gl3.glUniform3fv(materialAmbientColorId, 1, new Vec3(0.1f, 0.1f, 0.1f).getBuffer());

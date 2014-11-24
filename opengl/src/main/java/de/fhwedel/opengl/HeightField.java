@@ -1,11 +1,17 @@
 package de.fhwedel.opengl;
 
+import com.google.common.collect.Lists;
+import com.hackoeur.jglm.Vec3;
+import com.jogamp.opengl.math.VectorUtil;
+
+import java.util.List;
+
 public class HeightField {
-    public static final int DIMENSION = 200;
+    public static final int DIMENSION = 50;
     public static final int COLUMN_HEIGHT = DIMENSION / 4;
-    public static final double COLUMN_WIDTH = 1.0;
+    public static final double COLUMN_WIDTH = 5.0;
     public static final int COLUMN_VELOCITY = 0;
-    private static final double SPEED = 7;
+    private static final double SPEED = 25;
 
     private Column[][] mColumns;
     private Column[][] mNewColumns;
@@ -20,10 +26,10 @@ public class HeightField {
 
         for (int j = 0; j < DIMENSION; j++) {
             for (int i = 0; i < DIMENSION; i++) {
-                float y = Math.max(COLUMN_HEIGHT - 0.01f * (i*i + j*j), 0);
+                float y = Math.max(COLUMN_HEIGHT - 0.01f * (i * i + j * j), 0);
 
-                mColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY);
-                mNewColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY);
+                mColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY, new float[3]);
+                mNewColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY, new float[3]);
             }
         }
     }
@@ -41,12 +47,12 @@ public class HeightField {
         for (int j = 0; j < DIMENSION; j++) {
             for (int i = 0; i < DIMENSION; i++) {
                 Column center = getColumn(mColumns, i, j);
-                Column left = getColumn(mColumns, i-1, j);
-                Column right = getColumn(mColumns, i+1, j);
-                Column top = getColumn(mColumns, i, j-1);
-                Column bottom = getColumn(mColumns, i, j+1);
+                Column left = getColumn(mColumns, i - 1, j);
+                Column right = getColumn(mColumns, i + 1, j);
+                Column top = getColumn(mColumns, i, j - 1);
+                Column bottom = getColumn(mColumns, i, j + 1);
 
-                double f = SPEED * SPEED * (left.height + right.height + top.height + bottom.height - 4*center.height) / (COLUMN_WIDTH * COLUMN_WIDTH);
+                double f = SPEED * SPEED * (left.height + right.height + top.height + bottom.height - 4 * center.height) / (COLUMN_WIDTH * COLUMN_WIDTH);
 
 
                 center.velocity += f * deltaT;
@@ -64,15 +70,94 @@ public class HeightField {
                 column.height = newColumn.height;
             }
         }
+
+        for (int j = 0; j < DIMENSION; j++) {
+            for (int i = 0; i < DIMENSION; i++) {
+                getColumn(mColumns, i, j).normal = getNormalFor(i, j);
+            }
+        }
+
     }
 
     public float[] getVertexArray() {
-        //@todo: to be implemented.
-        return new float[9];
+        List<Integer> indices = indices();
+
+        float[] result = new float[indices.size() * 3];
+
+        int k = 0;
+
+        for (Integer integer : indices) {
+            int i = integer % DIMENSION;
+            int j = integer / DIMENSION;
+
+            result[k++] = (float) (j * COLUMN_WIDTH);
+            result[k++] = (float) mColumns[i][j].height;
+            result[k++] = (float) (i * COLUMN_WIDTH);
+        }
+
+        return result;
     }
 
-    public float[] getNormalArray() {
-        return TrianglePack.fromVertexArray(getVertexArray()).normalArray();
+    public float[] getNormals() {
+        List<Integer> indices = indices();
+
+        float[] result = new float[indices.size() * 3];
+
+        int k = 0;
+
+        for (Integer integer : indices) {
+            int i = integer % DIMENSION;
+            int j = integer / DIMENSION;
+
+            result[k++] = mColumns[i][j].normal[0];
+            result[k++] = mColumns[i][j].normal[1];
+            result[k++] = mColumns[i][j].normal[2];
+        }
+
+        return result;
+    }
+
+
+    public float[] getNormalFor(int i, int j) {
+        float[] result = new float[3];
+
+        Vec3 normal = new Vec3((float) ((getColumn(mColumns, i - 1, j).height - getColumn(mColumns, i + 1, j).height) / COLUMN_WIDTH),
+                (float) ((getColumn(mColumns, i, j + 1).height - getColumn(mColumns, i, j - 1).height) / COLUMN_WIDTH),
+                2);
+
+        float[] normalized = VectorUtil.normalizeVec3(new float[3], normal.getArray());
+
+        result[0] = normalized[1];
+        result[1] = normalized[2];
+        result[2] = normalized[0];
+
+        return result;
+    }
+
+    private List<Integer> indices() {
+        List<Integer> result = Lists.newArrayList();
+
+        int vertexCount = DIMENSION * DIMENSION;
+        int col = 0;
+
+        int offset = DIMENSION - 1;
+        int length = DIMENSION;
+
+        for (int i = 0; i < vertexCount && (col < length - 1); i++) {
+            if ((i + 1) % length == 0) {
+                col = col + 1;
+            } else {
+                result.add(i);
+                result.add(i + offset + 2);
+                result.add(i + offset + 1);
+
+                result.add(i);
+                result.add(i + 1);
+                result.add(i + offset + 2);
+            }
+        }
+
+        return result;
     }
 
 //    for (int j = 0; j < DIMENSION - 1; j++) {

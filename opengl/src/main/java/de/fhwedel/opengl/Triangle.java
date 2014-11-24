@@ -7,11 +7,13 @@ public class Triangle {
     private final float[] v0;
     private final float[] v1;
     private final float[] v2;
+    private final float[] normal;
 
     public Triangle(float[] v0, float[] v1, float[] v2) {
         this.v0 = v0;
         this.v1 = v1;
         this.v2 = v2;
+        this.normal = VectorUtil.getNormalVec3(new float[3], v0, v1, v2, new float[3], new float[3]) ;
     }
 
     public boolean hasVertex(float [] toCheck) {
@@ -21,6 +23,6 @@ public class Triangle {
     }
 
     public float[] normal() {
-        return VectorUtil.getNormalVec3(new float[3], v0, v1, v2, new float[3], new float[3]);
+        return normal;
     }
 }
