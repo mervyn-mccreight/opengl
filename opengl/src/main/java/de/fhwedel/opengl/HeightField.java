@@ -7,11 +7,13 @@ import com.jogamp.opengl.math.VectorUtil;
 import java.util.List;
 
 public class HeightField {
-    public static final int DIMENSION = 50;
-    public static final int COLUMN_HEIGHT = DIMENSION / 4;
-    public static final double COLUMN_WIDTH = 5.0;
+    public static final int DIMENSION = 100;
+    public static final int COLUMN_HEIGHT = DIMENSION / 10;
+    public static final double COLUMN_WIDTH = 0.5;
     public static final int COLUMN_VELOCITY = 0;
-    private static final double SPEED = 25;
+    private static final double SPEED = 3;
+
+    private static final Vec3 INITIAL_POSITION = new Vec3((float) (-COLUMN_WIDTH * DIMENSION) / 2, -COLUMN_HEIGHT, (float) (-COLUMN_WIDTH * DIMENSION) / 2);
 
     private Column[][] mColumns;
     private Column[][] mNewColumns;
@@ -54,11 +56,9 @@ public class HeightField {
 
                 double f = SPEED * SPEED * (left.height + right.height + top.height + bottom.height - 4 * center.height) / (COLUMN_WIDTH * COLUMN_WIDTH);
 
-
                 center.velocity += f * deltaT;
                 Column newColumn = getColumn(mNewColumns, i, j);
                 newColumn.height = center.height + center.velocity * deltaT;
-
             }
         }
 
@@ -68,6 +68,29 @@ public class HeightField {
                 Column newColumn = getColumn(mNewColumns, i, j);
 
                 column.height = newColumn.height;
+            }
+        }
+
+        for (int j = 0; j < DIMENSION; j++) {
+            for (int i = 0; i < DIMENSION; i++) {
+                Column center = getColumn(mColumns, i, j);
+                Column left = getColumn(mColumns, i - 1, j);
+                Column right = getColumn(mColumns, i + 1, j);
+                Column top = getColumn(mColumns, i, j - 1);
+                Column bottom = getColumn(mColumns, i, j + 1);
+
+                // (u[i+1,j]+u[i-1,j]+u[i,j+1]+u[i,j-1])/4 – u[i,j]
+                // calculates average slope in all four directions
+                double offset = (right.height + left.height + bottom.height + top.height) / 4 - center.height;
+
+                // maxslope is in percent between 0 and 1.
+                double maxOffset = 0.3 * COLUMN_WIDTH;
+
+                if (offset > maxOffset) {
+                    center.height += offset - maxOffset;
+                } else if (offset < -maxOffset) {
+                    center.height += offset + maxOffset;
+                }
             }
         }
 
@@ -171,5 +194,8 @@ public class HeightField {
 //        gl.glEnd();
 //    }
 
+    public Vec3 getPosition() {
+        return INITIAL_POSITION;
+    }
 
 }

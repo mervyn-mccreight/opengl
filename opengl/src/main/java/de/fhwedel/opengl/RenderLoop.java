@@ -131,20 +131,21 @@ public class RenderLoop implements GLEventListener {
         gl.glDepthFunc(GL.GL_LESS);
 
 
-        GL3 gl3 = gl.getGL3();
-
+        GL2 gl2 = gl.getGL2();
+        //gl2.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_LINE);
+        gl2.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_FILL);
 
 
         IntBuffer textureUVBuffer = IntBuffer.allocate(1);
-        gl3.glGenBuffers(1, textureUVBuffer);
+        gl2.glGenBuffers(1, textureUVBuffer);
         textureUVBufferId = textureUVBuffer.get(0);
-        gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, textureUVBufferId);
-        gl3.glBufferData(GL3.GL_ARRAY_BUFFER, textureUVData.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(textureUVData), GL3.GL_STATIC_DRAW);
+        gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, textureUVBufferId);
+        gl2.glBufferData(GL2.GL_ARRAY_BUFFER, textureUVData.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(textureUVData), GL2.GL_STATIC_DRAW);
 
 
 
 
-        programId = loadShaders(gl3);
+        programId = loadShaders(gl2);
 
         Texture texture = null;
         try {
@@ -154,63 +155,63 @@ public class RenderLoop implements GLEventListener {
             System.exit(0);
         }
 
-        texture.bind(gl3);
+        texture.bind(gl2);
     }
 
-    private int loadShaders(GL3 gl3) {
-        int vertexShaderId = gl3.glCreateShader(GL3.GL_VERTEX_SHADER);
-        int fragmentShaderId = gl3.glCreateShader(GL3.GL_FRAGMENT_SHADER);
+    private int loadShaders(GL2 gl2) {
+        int vertexShaderId = gl2.glCreateShader(GL2.GL_VERTEX_SHADER);
+        int fragmentShaderId = gl2.glCreateShader(GL2.GL_FRAGMENT_SHADER);
 
         System.out.println("Compiling vertex shader");
 
-        gl3.glShaderSource(vertexShaderId, 1, ShaderCodeLoader.readSourceFile("opengl/shader/vertex"), null);
-        gl3.glCompileShader(vertexShaderId);
+        gl2.glShaderSource(vertexShaderId, 1, ShaderCodeLoader.readSourceFile("opengl/shader/vertex"), null);
+        gl2.glCompileShader(vertexShaderId);
 
         // Check Vertex Shader
         IntBuffer vertexResult = IntBuffer.allocate(1);
         IntBuffer vertexInfoLogLength = IntBuffer.allocate(1);
 
-        gl3.glGetShaderiv(vertexShaderId, GL3.GL_COMPILE_STATUS, vertexResult);
-        gl3.glGetShaderiv(vertexShaderId, GL3.GL_INFO_LOG_LENGTH, vertexInfoLogLength);
+        gl2.glGetShaderiv(vertexShaderId, GL2.GL_COMPILE_STATUS, vertexResult);
+        gl2.glGetShaderiv(vertexShaderId, GL2.GL_INFO_LOG_LENGTH, vertexInfoLogLength);
 
         ByteBuffer vertexErrorMessage = ByteBuffer.allocate(vertexInfoLogLength.get(0));
-        gl3.glGetShaderInfoLog(vertexShaderId, vertexInfoLogLength.get(0), null, vertexErrorMessage);
+        gl2.glGetShaderInfoLog(vertexShaderId, vertexInfoLogLength.get(0), null, vertexErrorMessage);
         System.out.println(new String(vertexErrorMessage.array()));
 
         // Compile Fragment Shader
         System.out.println("Compiling fragment shader");
-        gl3.glShaderSource(fragmentShaderId, 1, ShaderCodeLoader.readSourceFile("opengl/shader/fragment"), null);
-        gl3.glCompileShader(fragmentShaderId);
+        gl2.glShaderSource(fragmentShaderId, 1, ShaderCodeLoader.readSourceFile("opengl/shader/fragment"), null);
+        gl2.glCompileShader(fragmentShaderId);
 
         // Check Fragment Shader
         IntBuffer fragmentResult = IntBuffer.allocate(1);
         IntBuffer fragmentInfoLogLength = IntBuffer.allocate(1);
 
-        gl3.glGetShaderiv(fragmentShaderId, GL3.GL_COMPILE_STATUS, fragmentResult);
-        gl3.glGetShaderiv(fragmentShaderId, GL3.GL_INFO_LOG_LENGTH, fragmentInfoLogLength);
+        gl2.glGetShaderiv(fragmentShaderId, GL2.GL_COMPILE_STATUS, fragmentResult);
+        gl2.glGetShaderiv(fragmentShaderId, GL2.GL_INFO_LOG_LENGTH, fragmentInfoLogLength);
         ByteBuffer fragmentErrorMessage = ByteBuffer.allocate(fragmentInfoLogLength.get(0));
-        gl3.glGetShaderInfoLog(fragmentShaderId, fragmentInfoLogLength.get(0), null, fragmentErrorMessage);
+        gl2.glGetShaderInfoLog(fragmentShaderId, fragmentInfoLogLength.get(0), null, fragmentErrorMessage);
         System.out.println(new String(fragmentErrorMessage.array()));
 
         // Link the program
         System.out.println("Linking program");
-        int programId = gl3.glCreateProgram();
-        gl3.glAttachShader(programId, vertexShaderId);
-        gl3.glAttachShader(programId, fragmentShaderId);
-        gl3.glLinkProgram(programId);
+        int programId = gl2.glCreateProgram();
+        gl2.glAttachShader(programId, vertexShaderId);
+        gl2.glAttachShader(programId, fragmentShaderId);
+        gl2.glLinkProgram(programId);
 
         // Check the program
         IntBuffer programResult = IntBuffer.allocate(1);
         IntBuffer programInfoLogLength = IntBuffer.allocate(1);
 
-        gl3.glGetProgramiv(programId, GL3.GL_LINK_STATUS, programResult);
-        gl3.glGetProgramiv(programId, GL3.GL_INFO_LOG_LENGTH, programInfoLogLength);
+        gl2.glGetProgramiv(programId, GL2.GL_LINK_STATUS, programResult);
+        gl2.glGetProgramiv(programId, GL2.GL_INFO_LOG_LENGTH, programInfoLogLength);
         ByteBuffer programErrorMessage = ByteBuffer.allocate(programInfoLogLength.get(0));
-        gl3.glGetProgramInfoLog(programId, programInfoLogLength.get(0), null, programErrorMessage);
+        gl2.glGetProgramInfoLog(programId, programInfoLogLength.get(0), null, programErrorMessage);
         System.out.println(new String(programErrorMessage.array()));
 
-        gl3.glDeleteShader(vertexShaderId);
-        gl3.glDeleteShader(fragmentShaderId);
+        gl2.glDeleteShader(vertexShaderId);
+        gl2.glDeleteShader(fragmentShaderId);
 
         return programId;
     }
@@ -231,61 +232,61 @@ public class RenderLoop implements GLEventListener {
     }
 
     private void render(GLAutoDrawable drawable) {
-        GL3 gl3 = drawable.getGL().getGL3();
+        GL2 gl2 = drawable.getGL().getGL2();
 
         float[] vertexArray = heightField.getVertexArray();
 
         IntBuffer vertexBuffer = IntBuffer.allocate(1);
-        gl3.glGenBuffers(1, vertexBuffer);
+        gl2.glGenBuffers(1, vertexBuffer);
         vertexBufferId = vertexBuffer.get(0);
-        gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, vertexBufferId);
-        gl3.glBufferData(GL3.GL_ARRAY_BUFFER, vertexArray.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(vertexArray), GL3.GL_DYNAMIC_DRAW);
+        gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, vertexBufferId);
+        gl2.glBufferData(GL2.GL_ARRAY_BUFFER, vertexArray.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(vertexArray), GL2.GL_DYNAMIC_DRAW);
 
         float[] normalArray = heightField.getNormals();
 //        float[] normalArray = new float[vertexArray.length];
 
         IntBuffer normalBuffer = IntBuffer.allocate(1);
-        gl3.glGenBuffers(1, normalBuffer);
+        gl2.glGenBuffers(1, normalBuffer);
         normalBufferId = normalBuffer.get();
-        gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, normalBufferId);
-        gl3.glBufferData(GL3.GL_ARRAY_BUFFER, normalArray.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(normalArray), GL3.GL_DYNAMIC_DRAW);
+        gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, normalBufferId);
+        gl2.glBufferData(GL2.GL_ARRAY_BUFFER, normalArray.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(normalArray), GL2.GL_DYNAMIC_DRAW);
 
-        gl3.glClearColor(0, 0, 0.4f, 0);
-        gl3.glClear(GL3.GL_COLOR_BUFFER_BIT | GL3.GL_DEPTH_BUFFER_BIT);
-        gl3.glUseProgram(programId);
+        gl2.glClearColor(0.5f, 0.5f, 0.5f, 0);
+        gl2.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
+        gl2.glUseProgram(programId);
 
         //render objects here.
-        gl3.glEnableVertexAttribArray(0);
-        gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, vertexBufferId);
-        gl3.glVertexAttribPointer(0,    // index of attribute (vertex, color...)
+        gl2.glEnableVertexAttribArray(0);
+        gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, vertexBufferId);
+        gl2.glVertexAttribPointer(0,    // index of attribute (vertex, color...)
                 3,    // number of vertices
-                GL3.GL_FLOAT,  // type
+                GL2.GL_FLOAT,  // type
                 false, // normalized?
                 0,    // stride (Schrittweite)
                 0);   // offset
 
-        gl3.glEnableVertexAttribArray(1);
-        gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, textureUVBufferId);
-        gl3.glVertexAttribPointer(1,
+        gl2.glEnableVertexAttribArray(1);
+        gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, textureUVBufferId);
+        gl2.glVertexAttribPointer(1,
                 2,
-                GL3.GL_FLOAT,
+                GL2.GL_FLOAT,
                 false,
                 0,
                 0);
 
-        gl3.glEnableVertexAttribArray(2);
-        gl3.glBindBuffer(GL3.GL_ARRAY_BUFFER, normalBufferId);
-        gl3.glVertexAttribPointer(2,
+        gl2.glEnableVertexAttribArray(2);
+        gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, normalBufferId);
+        gl2.glVertexAttribPointer(2,
                 3,
-                GL3.GL_FLOAT,
+                GL2.GL_FLOAT,
                 false,
                 0,
                 0);
 
-        gl3.glDrawArrays(GL3.GL_TRIANGLES, 0, vertexArray.length / 3); // starting from 0, 12*3 vertices total
-        gl3.glDisableVertexAttribArray(0);
-        gl3.glDisableVertexAttribArray(1);
-        gl3.glDisableVertexAttribArray(2);
+        gl2.glDrawArrays(GL2.GL_TRIANGLES, 0, vertexArray.length / 3); // starting from 0, 12*3 vertices total
+        gl2.glDisableVertexAttribArray(0);
+        gl2.glDisableVertexAttribArray(1);
+        gl2.glDisableVertexAttribArray(2);
     }
 
     private void update(GLAutoDrawable drawable, double deltaT) {
@@ -293,8 +294,9 @@ public class RenderLoop implements GLEventListener {
         heightField.update(deltaT);
 
         Mat4 model = Mat4.MAT4_IDENTITY;
+        model = model.translate(heightField.getPosition());
 
-        Mat4 view = Matrices.lookAt(new Vec3(40, 80, 30), // eye
+        Mat4 view = Matrices.lookAt(new Vec3(0, 30, 30), // eye
                 new Vec3(0, 0, 0), // lookat
                 new Vec3(0, 1, 0) // up.
         );
@@ -305,31 +307,31 @@ public class RenderLoop implements GLEventListener {
                 100f
         );
 
-        GL3 gl3 = drawable.getGL().getGL3();
+        GL2 gl2 = drawable.getGL().getGL2();
 
-        int modelId = gl3.glGetUniformLocation(programId, "M");
-        int viewId = gl3.glGetUniformLocation(programId, "V");
-        int projectionId = gl3.glGetUniformLocation(programId, "P");
+        int modelId = gl2.glGetUniformLocation(programId, "M");
+        int viewId = gl2.glGetUniformLocation(programId, "V");
+        int projectionId = gl2.glGetUniformLocation(programId, "P");
 
-        gl3.glUniformMatrix4fv(modelId, 1, false, model.getBuffer());
-        gl3.glUniformMatrix4fv(viewId, 1, false, view.getBuffer());
-        gl3.glUniformMatrix4fv(projectionId, 1, false, projection.getBuffer());
+        gl2.glUniformMatrix4fv(modelId, 1, false, model.getBuffer());
+        gl2.glUniformMatrix4fv(viewId, 1, false, view.getBuffer());
+        gl2.glUniformMatrix4fv(projectionId, 1, false, projection.getBuffer());
 
-        int lightPositionId = gl3.glGetUniformLocation(programId, "LightPosition_worldspace");
-        gl3.glUniform3fv(lightPositionId, 1, new Vec3(0, 30, 0).getBuffer());
+        int lightPositionId = gl2.glGetUniformLocation(programId, "LightPosition_worldspace");
+        gl2.glUniform3fv(lightPositionId, 1, new Vec3(0, 30, 0).getBuffer());
 
-        int lightColorId = gl3.glGetUniformLocation(programId, "LightColor");
-        gl3.glUniform3fv(lightColorId, 1, new Vec3(1, 1, 1f).getBuffer());
+        int lightColorId = gl2.glGetUniformLocation(programId, "LightColor");
+        gl2.glUniform3fv(lightColorId, 1, new Vec3(1, 1, 1f).getBuffer());
 
-        int lightPowerId = gl3.glGetUniformLocation(programId, "LightPower");
-        gl3.glUniform1f(lightPowerId, 200f);
+        int lightPowerId = gl2.glGetUniformLocation(programId, "LightPower");
+        gl2.glUniform1f(lightPowerId, 300f);
 
-        int materialAmbientColorId = gl3.glGetUniformLocation(programId, "MaterialAmbientComponent");
-        gl3.glUniform3fv(materialAmbientColorId, 1, new Vec3(0.1f, 0.1f, 0.1f).getBuffer());
+        int materialAmbientColorId = gl2.glGetUniformLocation(programId, "MaterialAmbientComponent");
+        gl2.glUniform3fv(materialAmbientColorId, 1, new Vec3(0.1f, 0.1f, 0.1f).getBuffer());
 
         Vec4 specularComponent = new Vec4(0.3f, 0.3f, 0.3f, 5f);
-        int specularId = gl3.glGetUniformLocation(programId, "MaterialSpecularComponent");
-        gl3.glUniform4f(specularId, specularComponent.getX(), specularComponent.getY(), specularComponent.getZ(), specularComponent.getW());
+        int specularId = gl2.glGetUniformLocation(programId, "MaterialSpecularComponent");
+        gl2.glUniform4f(specularId, specularComponent.getX(), specularComponent.getY(), specularComponent.getZ(), specularComponent.getW());
     }
 
     @Override
