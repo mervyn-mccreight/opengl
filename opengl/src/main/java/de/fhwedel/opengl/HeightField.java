@@ -13,6 +13,7 @@ public class HeightField {
     private static final Vec3 INITIAL_POSITION = new Vec3((float) (-COLUMN_WIDTH * DIMENSION) / 2, (float) -COLUMN_HEIGHT, (float) (-COLUMN_WIDTH * DIMENSION) / 2);
     private static final double SPEED = COLUMN_WIDTH * 6;
     public static final int COLUMN_VELOCITY = 0;
+    public static final double MAX_SLOPE = 0.5;
     private final List<Integer> indices;
 
     private Column[][] mColumns;
@@ -93,7 +94,7 @@ public class HeightField {
                 double offset = (right.height + left.height + bottom.height + top.height) / 4 - center.height;
 
                 // maxslope is in percent between 0 and 1.
-                double maxOffset = 0.3 * COLUMN_WIDTH;
+                double maxOffset = MAX_SLOPE * COLUMN_WIDTH;
 
                 if (offset > maxOffset) {
                     center.height += offset - maxOffset;
