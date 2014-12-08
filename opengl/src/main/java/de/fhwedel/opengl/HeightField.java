@@ -12,7 +12,7 @@ public class HeightField {
     public static final double COLUMN_WIDTH = 0.5;
     private static final Vec3 INITIAL_POSITION = new Vec3((float) (-COLUMN_WIDTH * DIMENSION) / 2, (float) -COLUMN_HEIGHT, (float) (-COLUMN_WIDTH * DIMENSION) / 2);
     public static final int COLUMN_VELOCITY = 0;
-    private static final double SPEED = 4;
+    private static final double SPEED = 3;
     private final List<Integer> indices;
 
     private Column[][] mColumns;
