@@ -8,18 +8,26 @@ import java.util.List;
 
 public class HeightField {
     public static final int DIMENSION = 100;
-    public static final int COLUMN_HEIGHT = DIMENSION / 10;
+    public static final double COLUMN_HEIGHT = DIMENSION / 10;
     public static final double COLUMN_WIDTH = 0.5;
+    private static final Vec3 INITIAL_POSITION = new Vec3((float) (-COLUMN_WIDTH * DIMENSION) / 2, (float) -COLUMN_HEIGHT, (float) (-COLUMN_WIDTH * DIMENSION) / 2);
     public static final int COLUMN_VELOCITY = 0;
     private static final double SPEED = 3;
-
-    private static final Vec3 INITIAL_POSITION = new Vec3((float) (-COLUMN_WIDTH * DIMENSION) / 2, -COLUMN_HEIGHT, (float) (-COLUMN_WIDTH * DIMENSION) / 2);
+    private final List<Integer> indices;
 
     private Column[][] mColumns;
     private Column[][] mNewColumns;
+    private float[] vertexArray;
+    private float[] normalArray;
 
     public HeightField() {
         initColumns();
+        indices = indices();
+        vertexArray = new float[indices.size() * 3];
+        normalArray = new float[indices.size() * 3];
+
+        getVertexArray();
+        getNormals();
     }
 
     private void initColumns() {
@@ -28,7 +36,7 @@ public class HeightField {
 
         for (int j = 0; j < DIMENSION; j++) {
             for (int i = 0; i < DIMENSION; i++) {
-                float y = Math.max(COLUMN_HEIGHT - 0.01f * (i * i + j * j), 0);
+                float y = Math.max((float) COLUMN_HEIGHT - 0.01f * (i + j), 0);
 
                 mColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY, new float[3]);
                 mNewColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY, new float[3]);
@@ -103,41 +111,33 @@ public class HeightField {
     }
 
     public float[] getVertexArray() {
-        List<Integer> indices = indices();
-
-        float[] result = new float[indices.size() * 3];
-
         int k = 0;
 
         for (Integer integer : indices) {
             int i = integer % DIMENSION;
             int j = integer / DIMENSION;
 
-            result[k++] = (float) (j * COLUMN_WIDTH);
-            result[k++] = (float) mColumns[i][j].height;
-            result[k++] = (float) (i * COLUMN_WIDTH);
+            vertexArray[k++] = (float) (j * COLUMN_WIDTH);
+            vertexArray[k++] = (float) mColumns[i][j].height;
+            vertexArray[k++] = (float) (i * COLUMN_WIDTH);
         }
 
-        return result;
+        return vertexArray;
     }
 
     public float[] getNormals() {
-        List<Integer> indices = indices();
-
-        float[] result = new float[indices.size() * 3];
-
         int k = 0;
 
         for (Integer integer : indices) {
             int i = integer % DIMENSION;
             int j = integer / DIMENSION;
 
-            result[k++] = mColumns[i][j].normal[0];
-            result[k++] = mColumns[i][j].normal[1];
-            result[k++] = mColumns[i][j].normal[2];
+            normalArray[k++] = mColumns[i][j].normal[0];
+            normalArray[k++] = mColumns[i][j].normal[1];
+            normalArray[k++] = mColumns[i][j].normal[2];
         }
 
-        return result;
+        return normalArray;
     }
 
 

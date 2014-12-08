@@ -20,6 +20,8 @@ import java.nio.IntBuffer;
 public class RenderLoop implements GLEventListener {
 
     private final HeightField heightField;
+    private final IntBuffer vertexBuffer = IntBuffer.allocate(1);
+    private final IntBuffer normalBuffer = IntBuffer.allocate(1);
     // An array of 3 vectors which represents 3 vertices
     private float vertexBufferData[] = {
             -1.0f,-1.0f,-1.0f, // triangle 1 : begin
@@ -59,7 +61,6 @@ public class RenderLoop implements GLEventListener {
             -1.0f, 1.0f, 1.0f,
             1.0f,-1.0f, 1.0f
     };
-
     private float textureUVData[] = {
             0.000059f, 0.000004f,
             0.000103f, 0.336048f,
@@ -98,7 +99,6 @@ public class RenderLoop implements GLEventListener {
             1.000000f, 0.671847f,
             0.667979f, 0.335851f
     };
-
     private long lastTime = System.currentTimeMillis();
     private int vertexBufferId;
     private int programId;
@@ -236,7 +236,6 @@ public class RenderLoop implements GLEventListener {
 
         float[] vertexArray = heightField.getVertexArray();
 
-        IntBuffer vertexBuffer = IntBuffer.allocate(1);
         gl2.glGenBuffers(1, vertexBuffer);
         vertexBufferId = vertexBuffer.get(0);
         gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, vertexBufferId);
@@ -245,7 +244,6 @@ public class RenderLoop implements GLEventListener {
         float[] normalArray = heightField.getNormals();
 //        float[] normalArray = new float[vertexArray.length];
 
-        IntBuffer normalBuffer = IntBuffer.allocate(1);
         gl2.glGenBuffers(1, normalBuffer);
         normalBufferId = normalBuffer.get();
         gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, normalBufferId);
@@ -287,6 +285,9 @@ public class RenderLoop implements GLEventListener {
         gl2.glDisableVertexAttribArray(0);
         gl2.glDisableVertexAttribArray(1);
         gl2.glDisableVertexAttribArray(2);
+
+        vertexBuffer.clear();
+        normalBuffer.clear();
     }
 
     private void update(GLAutoDrawable drawable, double deltaT) {
