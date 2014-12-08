@@ -9,10 +9,10 @@ import java.util.List;
 public class HeightField {
     public static final int DIMENSION = 100;
     public static final double COLUMN_HEIGHT = DIMENSION / 10;
-    public static final double COLUMN_WIDTH = 0.5;
+    public static final double COLUMN_WIDTH = 0.3;
     private static final Vec3 INITIAL_POSITION = new Vec3((float) (-COLUMN_WIDTH * DIMENSION) / 2, (float) -COLUMN_HEIGHT, (float) (-COLUMN_WIDTH * DIMENSION) / 2);
+    private static final double SPEED = COLUMN_WIDTH * 6;
     public static final int COLUMN_VELOCITY = 0;
-    private static final double SPEED = 3;
     private final List<Integer> indices;
 
     private Column[][] mColumns;
