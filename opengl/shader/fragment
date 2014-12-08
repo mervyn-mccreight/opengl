@@ -10,7 +10,6 @@ in float distance;
 
 out vec3 color;
 
-uniform sampler2D myTextureSampler;
 uniform vec3 LightColor;
 uniform float LightPower;
 

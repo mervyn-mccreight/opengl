@@ -22,88 +22,8 @@ public class RenderLoop implements GLEventListener {
     private final HeightField heightField;
     private final IntBuffer vertexBuffer = IntBuffer.allocate(1);
     private final IntBuffer normalBuffer = IntBuffer.allocate(1);
-    // An array of 3 vectors which represents 3 vertices
-    private float vertexBufferData[] = {
-            -1.0f,-1.0f,-1.0f, // triangle 1 : begin
-            -1.0f,-1.0f, 1.0f,
-            -1.0f, 1.0f, 1.0f, // triangle 1 : end
-            1.0f, 1.0f,-1.0f, // triangle 2 : begin
-            -1.0f,-1.0f,-1.0f,
-            -1.0f, 1.0f,-1.0f, // triangle 2 : end
-            1.0f,-1.0f, 1.0f,
-            -1.0f,-1.0f,-1.0f,
-            1.0f,-1.0f,-1.0f,
-            1.0f, 1.0f,-1.0f,
-            1.0f,-1.0f,-1.0f,
-            -1.0f,-1.0f,-1.0f,
-            -1.0f,-1.0f,-1.0f,
-            -1.0f, 1.0f, 1.0f,
-            -1.0f, 1.0f,-1.0f,
-            1.0f,-1.0f, 1.0f,
-            -1.0f,-1.0f, 1.0f,
-            -1.0f,-1.0f,-1.0f,
-            -1.0f, 1.0f, 1.0f,
-            -1.0f,-1.0f, 1.0f,
-            1.0f,-1.0f, 1.0f,
-            1.0f, 1.0f, 1.0f,
-            1.0f,-1.0f,-1.0f,
-            1.0f, 1.0f,-1.0f,
-            1.0f,-1.0f,-1.0f,
-            1.0f, 1.0f, 1.0f,
-            1.0f,-1.0f, 1.0f,
-            1.0f, 1.0f, 1.0f,
-            1.0f, 1.0f,-1.0f,
-            -1.0f, 1.0f,-1.0f,
-            1.0f, 1.0f, 1.0f,
-            -1.0f, 1.0f,-1.0f,
-            -1.0f, 1.0f, 1.0f,
-            1.0f, 1.0f, 1.0f,
-            -1.0f, 1.0f, 1.0f,
-            1.0f,-1.0f, 1.0f
-    };
-    private float textureUVData[] = {
-            0.000059f, 0.000004f,
-            0.000103f, 0.336048f,
-            0.335973f, 0.335903f,
-            1.000000f, 0.000013f,
-            0.667979f, 0.335851f,
-            0.999958f, 0.336064f,
-            0.667979f, 0.335851f,
-            0.336024f, 0.671877f,
-            0.667969f, 0.671889f,
-            1.000000f, 0.000013f,
-            0.668104f, 0.000013f,
-            0.667979f, 0.335851f,
-            0.000059f, 0.000004f,
-            0.335973f, 0.335903f,
-            0.336098f, 0.000071f,
-            0.667979f, 0.335851f,
-            0.335973f, 0.335903f,
-            0.336024f, 0.671877f,
-            1.000000f, 0.671847f,
-            0.999958f, 0.336064f,
-            0.667979f, 0.335851f,
-            0.668104f, 0.000013f,
-            0.335973f, 0.335903f,
-            0.667979f, 0.335851f,
-            0.335973f, 0.335903f,
-            0.668104f, 0.000013f,
-            0.336098f, 0.000071f,
-            0.000103f, 0.336048f,
-            0.000004f, 0.671870f,
-            0.336024f, 0.671877f,
-            0.000103f, 0.336048f,
-            0.336024f, 0.671877f,
-            0.335973f, 0.335903f,
-            0.667969f, 0.671889f,
-            1.000000f, 0.671847f,
-            0.667979f, 0.335851f
-    };
     private long lastTime = System.currentTimeMillis();
-    private int vertexBufferId;
     private int programId;
-    private int textureUVBufferId;
-    private int normalBufferId;
 
     public RenderLoop() {
         heightField = new HeightField();
@@ -135,27 +55,10 @@ public class RenderLoop implements GLEventListener {
         //gl2.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_LINE);
         gl2.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_FILL);
 
-
-        IntBuffer textureUVBuffer = IntBuffer.allocate(1);
-        gl2.glGenBuffers(1, textureUVBuffer);
-        textureUVBufferId = textureUVBuffer.get(0);
-        gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, textureUVBufferId);
-        gl2.glBufferData(GL2.GL_ARRAY_BUFFER, textureUVData.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(textureUVData), GL2.GL_STATIC_DRAW);
-
-
-
-
         programId = loadShaders(gl2);
 
-        Texture texture = null;
-        try {
-            texture = loadTexture("opengl/textures/cube.dds");
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(0);
-        }
-
-        texture.bind(gl2);
+        gl2.glGenBuffers(1, vertexBuffer);
+        gl2.glGenBuffers(1, normalBuffer);
     }
 
     private int loadShaders(GL2 gl2) {
@@ -236,16 +139,16 @@ public class RenderLoop implements GLEventListener {
 
         float[] vertexArray = heightField.getVertexArray();
 
-        gl2.glGenBuffers(1, vertexBuffer);
-        vertexBufferId = vertexBuffer.get(0);
+
+        int vertexBufferId = vertexBuffer.get(0);
         gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, vertexBufferId);
         gl2.glBufferData(GL2.GL_ARRAY_BUFFER, vertexArray.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(vertexArray), GL2.GL_DYNAMIC_DRAW);
 
         float[] normalArray = heightField.getNormals();
 //        float[] normalArray = new float[vertexArray.length];
 
-        gl2.glGenBuffers(1, normalBuffer);
-        normalBufferId = normalBuffer.get();
+
+        int normalBufferId = normalBuffer.get();
         gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, normalBufferId);
         gl2.glBufferData(GL2.GL_ARRAY_BUFFER, normalArray.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(normalArray), GL2.GL_DYNAMIC_DRAW);
 
@@ -263,15 +166,6 @@ public class RenderLoop implements GLEventListener {
                 0,    // stride (Schrittweite)
                 0);   // offset
 
-        gl2.glEnableVertexAttribArray(1);
-        gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, textureUVBufferId);
-        gl2.glVertexAttribPointer(1,
-                2,
-                GL2.GL_FLOAT,
-                false,
-                0,
-                0);
-
         gl2.glEnableVertexAttribArray(2);
         gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, normalBufferId);
         gl2.glVertexAttribPointer(2,
@@ -283,7 +177,6 @@ public class RenderLoop implements GLEventListener {
 
         gl2.glDrawArrays(GL2.GL_TRIANGLES, 0, vertexArray.length / 3); // starting from 0, 12*3 vertices total
         gl2.glDisableVertexAttribArray(0);
-        gl2.glDisableVertexAttribArray(1);
         gl2.glDisableVertexAttribArray(2);
 
         vertexBuffer.clear();
@@ -291,7 +184,6 @@ public class RenderLoop implements GLEventListener {
     }
 
     private void update(GLAutoDrawable drawable, double deltaT) {
-
         heightField.update(deltaT);
 
         Mat4 model = Mat4.MAT4_IDENTITY;
