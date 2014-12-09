@@ -3,7 +3,7 @@ package de.fhwedel.opengl;
 import com.jogamp.newt.event.WindowAdapter;
 import com.jogamp.newt.event.WindowEvent;
 import com.jogamp.newt.opengl.GLWindow;
-import com.jogamp.opengl.util.Animator;
+import com.jogamp.opengl.util.FPSAnimator;
 
 import javax.media.nativewindow.WindowClosingProtocol;
 import javax.media.opengl.FPSCounter;
@@ -25,7 +25,7 @@ public class Window {
 
         GLWindow window = GLWindow.create(caps);
 
-        final Animator animator = new Animator(window);
+        final FPSAnimator animator = new FPSAnimator(window, 60);
         animator.setUpdateFPSFrames(FPSCounter.DEFAULT_FRAMES_PER_INTERVAL, System.out);
 
         window.addWindowListener(new WindowAdapter() {
