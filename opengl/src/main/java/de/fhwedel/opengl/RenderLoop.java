@@ -5,6 +5,8 @@ import com.hackoeur.jglm.Matrices;
 import com.hackoeur.jglm.Vec3;
 import com.hackoeur.jglm.Vec4;
 import com.jogamp.common.nio.Buffers;
+import com.jogamp.newt.event.MouseEvent;
+import com.jogamp.opengl.math.FloatUtil;
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureData;
 import com.jogamp.opengl.util.texture.TextureIO;
@@ -17,13 +19,16 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 
-public class RenderLoop implements GLEventListener {
+public class RenderLoop extends AbstractMouseInput implements GLEventListener {
 
     private final HeightField heightField;
     private final IntBuffer vertexBuffer = IntBuffer.allocate(1);
     private final IntBuffer normalBuffer = IntBuffer.allocate(1);
     private long lastTime = System.currentTimeMillis();
     private int programId;
+    private int viewport[] = new int[4];
+    private Mat4 view;
+    private Mat4 projection;
 
     public RenderLoop() {
         heightField = new HeightField();
@@ -189,12 +194,12 @@ public class RenderLoop implements GLEventListener {
         Mat4 model = Mat4.MAT4_IDENTITY;
         model = model.translate(heightField.getPosition());
 
-        Mat4 view = Matrices.lookAt(new Vec3(0, 30, 30), // eye
+        view = Matrices.lookAt(new Vec3(0, 30, 30), // eye
                 new Vec3(0, 0, 0), // lookat
                 new Vec3(0, 1, 0) // up.
         );
 
-        Mat4 projection = Matrices.perspective(45,
+        projection = Matrices.perspective(45,
                 (float) Window.WIDTH / (float) Window.HEIGHT,
                 0.1f,
                 100f
@@ -229,8 +234,10 @@ public class RenderLoop implements GLEventListener {
 
     @Override
     public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
-//        // Get the OpenGL graphics context
-//        GL2 gl = drawable.getGL().getGL2();
+        viewport[0] = x;
+        viewport[1] = y;
+        viewport[2] = width;
+        viewport[3] = height;
 //
 //        height = (height == 0) ? 1 : height;  // Prevent divide by zero
 //        float aspect = (float) width / height; // Compute aspect ratio
@@ -253,5 +260,56 @@ public class RenderLoop implements GLEventListener {
 //        // Switch to the model-view transform
 //        gl.glMatrixMode(GLMatrixFunc.GL_MODELVIEW);
 //        gl.glLoadIdentity();    // reset
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent mouseEvent) {
+        int winX = mouseEvent.getX();
+        int winY = mouseEvent.getY();
+
+        Vec4 rayStart = new Vec4(
+                ((float) winX / (float) viewport[2] - 0.5f) * 2.0f,
+                ((float) winY / (float) viewport[3] - 0.5f) * 2.0f,
+                -1.0f,
+                1.0f);
+
+        Vec4 rayEnd = new Vec4(
+                ((float) winX / (float) viewport[2] - 0.5f) * 2.0f,
+                ((float) winY / (float) viewport[3] - 0.5f) * 2.0f,
+                0.0f,
+                1.0f);
+
+        float[] inverse = new float[16];
+
+        FloatUtil.invertMatrix(projection.getBuffer().array(), inverse);
+        Mat4 inverseProjection = new Mat4(inverse);
+
+        FloatUtil.invertMatrix(view.getBuffer().array(), inverse);
+        Mat4 inverseView = new Mat4(inverse);
+
+        float[] result = new float[4];
+        FloatUtil.multMatrixVec(inverseView.getBuffer().array(), rayStart.getBuffer().array(), result);
+        Vec4 rayStart_camera = new Vec4(result[0], result[1], result[2], result[3]);
+        rayStart_camera = rayStart_camera.scale(1 / rayStart_camera.getW());
+
+        FloatUtil.multMatrixVec(inverseProjection.getBuffer().array(), rayStart_camera.getBuffer().array(), result);
+        Vec4 rayStart_world = new Vec4(result[0], result[1], result[2], result[3]);
+        rayStart_world = rayStart_world.scale(1 / rayStart_world.getW());
+
+        FloatUtil.multMatrixVec(inverseView.getBuffer().array(), rayEnd.getBuffer().array(), result);
+        Vec4 rayEnd_camera = new Vec4(result[0], result[1], result[2], result[3]);
+        rayEnd_camera = rayEnd_camera.scale(1 / rayEnd_camera.getW());
+
+        FloatUtil.multMatrixVec(inverseProjection.getBuffer().array(), rayEnd_camera.getBuffer().array(), result);
+        Vec4 rayEnd_world = new Vec4(result[0], result[1], result[2], result[3]);
+        rayEnd_world = rayEnd_world.scale(1 / rayEnd_world.getW());
+
+        Vec4 rayDir_world4 = rayEnd_world.subtract(rayStart_world);
+
+        Vec3 rayDir_world = new Vec3(rayDir_world4.getX(), rayDir_world4.getY(), rayDir_world4.getZ());
+        rayDir_world = rayDir_world.getUnitVector();
+
+        System.out.println(String.format("Start - x: %f, y: %f, z: %f", rayStart_world.getX(), rayStart_world.getY(), rayStart_world.getZ()));
+        System.out.println(String.format("Direc - x: %f, y: %f, z: %f", rayDir_world.getX(), rayDir_world.getY(), rayDir_world.getZ()));
     }
 }

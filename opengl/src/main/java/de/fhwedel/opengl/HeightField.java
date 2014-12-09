@@ -13,7 +13,7 @@ public class HeightField {
     private static final Vec3 INITIAL_POSITION = new Vec3((float) (-COLUMN_WIDTH * DIMENSION) / 2, (float) -COLUMN_HEIGHT, (float) (-COLUMN_WIDTH * DIMENSION) / 2);
     private static final double SPEED = COLUMN_WIDTH * 6;
     public static final int COLUMN_VELOCITY = 0;
-    public static final double MAX_SLOPE = 0.5;
+    public static final double MAX_SLOPE = 1;
     private final List<Integer> indices;
 
     private Column[][] mColumns;
@@ -24,8 +24,9 @@ public class HeightField {
     public HeightField() {
         initColumns();
         indices = indices();
-        vertexArray = new float[indices.size() * 3];
-        normalArray = new float[indices.size() * 3];
+        int indexCount = indices.size();
+        vertexArray = new float[indexCount * 3];
+        normalArray = new float[indexCount * 3];
 
         getVertexArray();
         getNormals();
@@ -38,7 +39,7 @@ public class HeightField {
         for (int j = 0; j < DIMENSION; j++) {
             for (int i = 0; i < DIMENSION; i++) {
 //                float y = Math.max((float) COLUMN_HEIGHT - 0.01f * (i*i + j*j), 0);
-                float y = (float) Math.random() * 0.01f;
+                float y = (float) Math.random() * 0.05f;
 
                 mColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY, new float[3]);
                 mNewColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY, new float[3]);
