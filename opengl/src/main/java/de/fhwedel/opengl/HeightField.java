@@ -119,9 +119,9 @@ public class HeightField {
             int i = integer % DIMENSION;
             int j = integer / DIMENSION;
 
-            vertexArray[k++] = (float) (j * COLUMN_WIDTH);
-            vertexArray[k++] = (float) mColumns[i][j].height;
-            vertexArray[k++] = (float) (i * COLUMN_WIDTH);
+            vertexArray[k++] = j * COLUMN_WIDTH;
+            vertexArray[k++] = mColumns[i][j].height;
+            vertexArray[k++] = i * COLUMN_WIDTH;
         }
 
         return vertexArray;
@@ -146,8 +146,8 @@ public class HeightField {
     public float[] getNormalFor(int i, int j) {
         float[] result = new float[3];
 
-        Vec3 normal = new Vec3((float) ((getColumn(mColumns, i - 1, j).height - getColumn(mColumns, i + 1, j).height) / COLUMN_WIDTH),
-                (float) ((getColumn(mColumns, i, j + 1).height - getColumn(mColumns, i, j - 1).height) / COLUMN_WIDTH),
+        Vec3 normal = new Vec3((getColumn(mColumns, i - 1, j).height - getColumn(mColumns, i + 1, j).height) / COLUMN_WIDTH,
+                (getColumn(mColumns, i, j + 1).height - getColumn(mColumns, i, j - 1).height) / COLUMN_WIDTH,
                 2);
 
         float[] normalized = VectorUtil.normalizeVec3(new float[3], normal.getArray());
@@ -185,30 +185,20 @@ public class HeightField {
         return result;
     }
 
-//    for (int j = 0; j < DIMENSION - 1; j++) {
-//        gl.glBegin(GL2.GL_TRIANGLE_STRIP);
-//
-//        for (int i = 0; i < DIMENSION; i++) {
-//            gl.glVertex3d(i * COLUMN_WIDTH,  mColumns[i][j].height, j * COLUMN_WIDTH);
-//            gl.glVertex3d(i * COLUMN_WIDTH,  mColumns[i][j+1].height, (j+1) * COLUMN_WIDTH);
-//        }
-//
-//        gl.glEnd();
-//    }
-
     public Vec3 getPosition() {
         return INITIAL_POSITION;
     }
 
     public void sprinkle() {
-        getColumn(mColumns, DIMENSION/2-1, DIMENSION/2-1).height += 2.5;
-        getColumn(mColumns, DIMENSION/2, DIMENSION/2-1).height += 2.5;
-        getColumn(mColumns, DIMENSION/2+1, DIMENSION/2-1).height += 2.5;
-        getColumn(mColumns, DIMENSION/2-1, DIMENSION/2).height += 2.5;
-        getColumn(mColumns, DIMENSION/2, DIMENSION/2).height += 5;
-        getColumn(mColumns, DIMENSION/2+1, DIMENSION/2).height += 2.5;
-        getColumn(mColumns, DIMENSION/2-1, DIMENSION/2+1).height += 2.5;
-        getColumn(mColumns, DIMENSION/2, DIMENSION/2+1).height += 2.5;
-        getColumn(mColumns, DIMENSION/2+1, DIMENSION/2+1).height += 2.5;
+        float increaser = 1;
+        getColumn(mColumns, DIMENSION / 2 - 1, DIMENSION / 2 - 1).height += increaser / 2;
+        getColumn(mColumns, DIMENSION / 2, DIMENSION / 2 - 1).height += increaser / 2;
+        getColumn(mColumns, DIMENSION / 2 + 1, DIMENSION / 2 - 1).height +=increaser / 2;
+        getColumn(mColumns, DIMENSION / 2 - 1, DIMENSION / 2).height += increaser / 2;
+        getColumn(mColumns, DIMENSION / 2, DIMENSION / 2).height += increaser;
+        getColumn(mColumns, DIMENSION / 2 + 1, DIMENSION / 2).height += increaser / 2;
+        getColumn(mColumns, DIMENSION / 2 - 1, DIMENSION / 2 + 1).height += increaser / 2;
+        getColumn(mColumns, DIMENSION / 2, DIMENSION / 2 + 1).height += increaser / 2;
+        getColumn(mColumns, DIMENSION / 2 + 1, DIMENSION / 2 + 1).height += increaser / 2;
     }
 }
