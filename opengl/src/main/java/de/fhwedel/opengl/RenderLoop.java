@@ -5,33 +5,30 @@ import com.hackoeur.jglm.Matrices;
 import com.hackoeur.jglm.Vec3;
 import com.hackoeur.jglm.Vec4;
 import com.jogamp.common.nio.Buffers;
-import com.jogamp.opengl.util.texture.Texture;
-import com.jogamp.opengl.util.texture.TextureData;
-import com.jogamp.opengl.util.texture.TextureIO;
+import com.jogamp.newt.event.KeyEvent;
+import com.jogamp.newt.event.KeyListener;
 
-import javax.media.opengl.*;
-import java.io.File;
-import java.io.IOException;
+import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
+import javax.media.opengl.GLEventListener;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 
-public class RenderLoop implements GLEventListener {
+public class RenderLoop implements GLEventListener, KeyListener {
 
     private final HeightField heightField;
     private final IntBuffer vertexBuffer = IntBuffer.allocate(1);
     private final IntBuffer normalBuffer = IntBuffer.allocate(1);
     private long lastTime = System.currentTimeMillis();
     private int programId;
+    private Mat4 view;
+    private Mat4 projection;
 
     public RenderLoop() {
         heightField = new HeightField();
-    }
-
-    public static Texture loadTexture(String file) throws GLException, IOException {
-        TextureData textureData = TextureIO.newTextureData(GLProfile.getDefault(), new File(file), true, TextureIO.DDS);
-        return TextureIO.newTexture(textureData);
     }
 
     @Override
@@ -59,6 +56,18 @@ public class RenderLoop implements GLEventListener {
 
         gl2.glGenBuffers(1, vertexBuffer);
         gl2.glGenBuffers(1, normalBuffer);
+
+        // init camera.
+        view = Matrices.lookAt(new Vec3(0, 30, 30), // eye
+                new Vec3(0, 0, 0), // lookat
+                new Vec3(0, 1, 0) // up.
+        );
+
+        projection = Matrices.perspective(45,
+                (float) Window.WIDTH / (float) Window.HEIGHT,
+                0.1f,
+                100f
+        );
     }
 
     private int loadShaders(GL2 gl2) {
@@ -130,7 +139,7 @@ public class RenderLoop implements GLEventListener {
         long deltaTime = thisTime - lastTime;
         this.lastTime = thisTime;
 
-        update(drawable, deltaTime / 1000.0d);
+        update(drawable, deltaTime / 1000.0f);
         render(drawable);
     }
 
@@ -183,22 +192,11 @@ public class RenderLoop implements GLEventListener {
         normalBuffer.clear();
     }
 
-    private void update(GLAutoDrawable drawable, double deltaT) {
+    private void update(GLAutoDrawable drawable, float deltaT) {
         heightField.update(deltaT);
 
         Mat4 model = Mat4.MAT4_IDENTITY;
         model = model.translate(heightField.getPosition());
-
-        Mat4 view = Matrices.lookAt(new Vec3(0, 30, 30), // eye
-                new Vec3(0, 0, 0), // lookat
-                new Vec3(0, 1, 0) // up.
-        );
-
-        Mat4 projection = Matrices.perspective(45,
-                (float) Window.WIDTH / (float) Window.HEIGHT,
-                0.1f,
-                100f
-        );
 
         GL2 gl2 = drawable.getGL().getGL2();
 
@@ -253,5 +251,21 @@ public class RenderLoop implements GLEventListener {
 //        // Switch to the model-view transform
 //        gl.glMatrixMode(GLMatrixFunc.GL_MODELVIEW);
 //        gl.glLoadIdentity();    // reset
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_SPACE:
+                this.heightField.sprinkle();
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+
     }
 }

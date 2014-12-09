@@ -8,12 +8,12 @@ import java.util.List;
 
 public class HeightField {
     public static final int DIMENSION = 100;
-    public static final double COLUMN_HEIGHT = DIMENSION / 10;
-    public static final double COLUMN_WIDTH = 0.3;
-    private static final Vec3 INITIAL_POSITION = new Vec3((float) (-COLUMN_WIDTH * DIMENSION) / 2, (float) -COLUMN_HEIGHT, (float) (-COLUMN_WIDTH * DIMENSION) / 2);
-    private static final double SPEED = COLUMN_WIDTH * 6;
+    public static final float COLUMN_HEIGHT = DIMENSION / 10;
+    public static final float COLUMN_WIDTH = 0.3f;
+    private static final Vec3 INITIAL_POSITION = new Vec3(-COLUMN_WIDTH * DIMENSION / 2, (float) -COLUMN_HEIGHT, -COLUMN_WIDTH * DIMENSION / 2);
+    private static final float SPEED = COLUMN_WIDTH * 6;
     public static final int COLUMN_VELOCITY = 0;
-    public static final double MAX_SLOPE = 0.5;
+    public static final float MAX_SLOPE = 0.3f;
     private final List<Integer> indices;
 
     private Column[][] mColumns;
@@ -38,7 +38,7 @@ public class HeightField {
         for (int j = 0; j < DIMENSION; j++) {
             for (int i = 0; i < DIMENSION; i++) {
 //                float y = Math.max((float) COLUMN_HEIGHT - 0.01f * (i*i + j*j), 0);
-                float y = (float) Math.random() * 0.01f;
+                float y = (float) Math.random() * 0.001f;
 
                 mColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY, new float[3]);
                 mNewColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY, new float[3]);
@@ -55,7 +55,7 @@ public class HeightField {
         return columnArray[i][j];
     }
 
-    public void update(double deltaT) {
+    public void update(float deltaT) {
         for (int j = 0; j < DIMENSION; j++) {
             for (int i = 0; i < DIMENSION; i++) {
                 Column center = getColumn(mColumns, i, j);
@@ -200,4 +200,15 @@ public class HeightField {
         return INITIAL_POSITION;
     }
 
+    public void sprinkle() {
+        getColumn(mColumns, DIMENSION/2-1, DIMENSION/2-1).height += 2.5;
+        getColumn(mColumns, DIMENSION/2, DIMENSION/2-1).height += 2.5;
+        getColumn(mColumns, DIMENSION/2+1, DIMENSION/2-1).height += 2.5;
+        getColumn(mColumns, DIMENSION/2-1, DIMENSION/2).height += 2.5;
+        getColumn(mColumns, DIMENSION/2, DIMENSION/2).height += 5;
+        getColumn(mColumns, DIMENSION/2+1, DIMENSION/2).height += 2.5;
+        getColumn(mColumns, DIMENSION/2-1, DIMENSION/2+1).height += 2.5;
+        getColumn(mColumns, DIMENSION/2, DIMENSION/2+1).height += 2.5;
+        getColumn(mColumns, DIMENSION/2+1, DIMENSION/2+1).height += 2.5;
+    }
 }
