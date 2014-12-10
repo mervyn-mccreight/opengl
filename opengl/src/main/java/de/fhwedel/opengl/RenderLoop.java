@@ -196,7 +196,10 @@ public class RenderLoop implements GLEventListener, KeyListener {
         heightField.update(deltaT);
 
         Mat4 model = Mat4.MAT4_IDENTITY;
+
+        model = model.multiply(heightField.getScaleMatrix());
         model = model.translate(heightField.getPosition());
+
 
         GL2 gl2 = drawable.getGL().getGL2();
 

@@ -1,7 +1,9 @@
 package de.fhwedel.opengl;
 
 import com.google.common.collect.Lists;
+import com.hackoeur.jglm.Mat4;
 import com.hackoeur.jglm.Vec3;
+import com.hackoeur.jglm.Vec4;
 import com.jogamp.opengl.math.VectorUtil;
 
 import java.util.List;
@@ -9,11 +11,13 @@ import java.util.List;
 public class HeightField {
     public static final int DIMENSION = 100;
     public static final float COLUMN_HEIGHT = DIMENSION / 10;
-    public static final float COLUMN_WIDTH = 0.3f;
-    private static final Vec3 INITIAL_POSITION = new Vec3(-COLUMN_WIDTH * DIMENSION / 2, (float) -COLUMN_HEIGHT, -COLUMN_WIDTH * DIMENSION / 2);
-    private static final float SPEED = COLUMN_WIDTH * 6;
+    public static final float COLUMN_WIDTH = 1f;
     public static final int COLUMN_VELOCITY = 0;
     public static final float MAX_SLOPE = 0.3f;
+    private static final Vec3 INITIAL_POSITION = new Vec3(-COLUMN_WIDTH * DIMENSION / 2, (float) -COLUMN_HEIGHT, -COLUMN_WIDTH * DIMENSION / 2);
+    private static final float SPEED = COLUMN_WIDTH * 20;
+    private static final float SCALING_FACTOR = 0.95f;
+    private static final float INITIAL_SCALE = 0.3f;
     private final List<Integer> indices;
 
     private Column[][] mColumns;
@@ -38,7 +42,7 @@ public class HeightField {
         for (int j = 0; j < DIMENSION; j++) {
             for (int i = 0; i < DIMENSION; i++) {
 //                float y = Math.max((float) COLUMN_HEIGHT - 0.01f * (i*i + j*j), 0);
-                float y = (float) Math.random() * 0.001f;
+                float y = (float) Math.random() * 0.00f;
 
                 mColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY, new float[3]);
                 mNewColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY, new float[3]);
@@ -83,26 +87,33 @@ public class HeightField {
 
         for (int j = 0; j < DIMENSION; j++) {
             for (int i = 0; i < DIMENSION; i++) {
-                Column center = getColumn(mColumns, i, j);
-                Column left = getColumn(mColumns, i - 1, j);
-                Column right = getColumn(mColumns, i + 1, j);
-                Column top = getColumn(mColumns, i, j - 1);
-                Column bottom = getColumn(mColumns, i, j + 1);
-
-                // (u[i+1,j]+u[i-1,j]+u[i,j+1]+u[i,j-1])/4 – u[i,j]
-                // calculates average slope in all four directions
-                double offset = (right.height + left.height + bottom.height + top.height) / 4 - center.height;
-
-                // maxslope is in percent between 0 and 1.
-                double maxOffset = MAX_SLOPE * COLUMN_WIDTH;
-
-                if (offset > maxOffset) {
-                    center.height += offset - maxOffset;
-                } else if (offset < -maxOffset) {
-                    center.height += offset + maxOffset;
-                }
+                getColumn(mColumns, i, j).velocity *= SCALING_FACTOR;
             }
         }
+
+//        for (int j = 0; j < DIMENSION; j++) {
+//            for (int i = 0; i < DIMENSION; i++) {
+//                Column center = getColumn(mColumns, i, j);
+//                Column left = getColumn(mColumns, i - 1, j);
+//                Column right = getColumn(mColumns, i + 1, j);
+//                Column top = getColumn(mColumns, i, j - 1);
+//                Column bottom = getColumn(mColumns, i, j + 1);
+//
+//                // (u[i+1,j]+u[i-1,j]+u[i,j+1]+u[i,j-1])/4 – u[i,j]
+//                // calculates average slope in all four directions
+//                double offset = (right.height + left.height + bottom.height + top.height) / 4 - center.height;
+//
+//                // maxslope is in percent between 0 and 1.
+//                double maxOffset = MAX_SLOPE * COLUMN_WIDTH;
+//
+//                if (offset > maxOffset) {
+//                    center.height += offset - maxOffset;
+//                } else if (offset < -maxOffset) {
+//                    center.height += offset + maxOffset;
+//                }
+//            }
+//        }
+
 
         for (int j = 0; j < DIMENSION; j++) {
             for (int i = 0; i < DIMENSION; i++) {
@@ -189,16 +200,32 @@ public class HeightField {
         return INITIAL_POSITION;
     }
 
+    public Mat4 getScaleMatrix() {
+        return new Mat4(new Vec4(INITIAL_SCALE, 0, 0, 0),
+                        new Vec4(0, INITIAL_SCALE, 0, 0),
+                        new Vec4(0, 0, INITIAL_SCALE, 0),
+                        new Vec4(0, 0, 0, 1));
+    }
+
     public void sprinkle() {
-        float increaser = 1;
-        getColumn(mColumns, DIMENSION / 2 - 1, DIMENSION / 2 - 1).height += increaser / 2;
-        getColumn(mColumns, DIMENSION / 2, DIMENSION / 2 - 1).height += increaser / 2;
-        getColumn(mColumns, DIMENSION / 2 + 1, DIMENSION / 2 - 1).height +=increaser / 2;
-        getColumn(mColumns, DIMENSION / 2 - 1, DIMENSION / 2).height += increaser / 2;
-        getColumn(mColumns, DIMENSION / 2, DIMENSION / 2).height += increaser;
-        getColumn(mColumns, DIMENSION / 2 + 1, DIMENSION / 2).height += increaser / 2;
-        getColumn(mColumns, DIMENSION / 2 - 1, DIMENSION / 2 + 1).height += increaser / 2;
-        getColumn(mColumns, DIMENSION / 2, DIMENSION / 2 + 1).height += increaser / 2;
-        getColumn(mColumns, DIMENSION / 2 + 1, DIMENSION / 2 + 1).height += increaser / 2;
+        float increaser = 3;
+
+        int v = (int)(Math.random() * DIMENSION);
+        int u = (int)(Math.random() * DIMENSION);
+
+        int j = v;
+        int i = u;
+
+        getColumn(mColumns, i - 1, j - 1).height += increaser / 2;
+        getColumn(mColumns, i, j - 1).height += increaser / 2;
+        getColumn(mColumns, i + 1, j - 1).height +=increaser / 2;
+
+        getColumn(mColumns, i - 1, j).height += increaser / 2;
+        getColumn(mColumns, i, j).height += increaser;
+        getColumn(mColumns, i + 1, j).height += increaser / 2;
+
+        getColumn(mColumns, i - 1, j + 1).height += increaser / 2;
+        getColumn(mColumns, i, j + 1).height += increaser / 2;
+        getColumn(mColumns, i + 1, j + 1).height += increaser / 2;
     }
 }
