@@ -10,13 +10,13 @@ import java.util.List;
 
 public class HeightField {
     public static final int DIMENSION = 100;
-    public static final float COLUMN_HEIGHT = DIMENSION / 10;
+    public static final float COLUMN_HEIGHT = DIMENSION / 100;
     public static final float COLUMN_WIDTH = 1f;
+    private static final Vec3 INITIAL_POSITION = new Vec3(-COLUMN_WIDTH * DIMENSION / 2, -COLUMN_HEIGHT, -COLUMN_WIDTH * DIMENSION / 2);
+    private static final float SPEED = COLUMN_WIDTH * 30;
     public static final int COLUMN_VELOCITY = 0;
     public static final float MAX_SLOPE = 0.3f;
-    private static final Vec3 INITIAL_POSITION = new Vec3(-COLUMN_WIDTH * DIMENSION / 2, (float) -COLUMN_HEIGHT, -COLUMN_WIDTH * DIMENSION / 2);
-    private static final float SPEED = COLUMN_WIDTH * 20;
-    private static final float SCALING_FACTOR = 0.95f;
+    private static final float SCALING_FACTOR = 0.98f;
     private static final float INITIAL_SCALE = 0.3f;
     private final List<Integer> indices;
 
@@ -41,7 +41,7 @@ public class HeightField {
 
         for (int j = 0; j < DIMENSION; j++) {
             for (int i = 0; i < DIMENSION; i++) {
-//                float y = Math.max((float) COLUMN_HEIGHT - 0.01f * (i*i + j*j), 0);
+//                float y = Math.max(COLUMN_HEIGHT - 0.01f * (i*i + j*j), 0);
                 float y = (float) Math.random() * 0.00f;
 
                 mColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY, new float[3]);
@@ -213,19 +213,16 @@ public class HeightField {
         int v = (int)(Math.random() * DIMENSION);
         int u = (int)(Math.random() * DIMENSION);
 
-        int j = v;
-        int i = u;
+        getColumn(mColumns, u - 1, v - 1).height += increaser / 2;
+        getColumn(mColumns, u, v - 1).height += increaser / 2;
+        getColumn(mColumns, u + 1, v - 1).height +=increaser / 2;
 
-        getColumn(mColumns, i - 1, j - 1).height += increaser / 2;
-        getColumn(mColumns, i, j - 1).height += increaser / 2;
-        getColumn(mColumns, i + 1, j - 1).height +=increaser / 2;
+        getColumn(mColumns, u - 1, v).height += increaser / 2;
+        getColumn(mColumns, u, v).height += increaser;
+        getColumn(mColumns, u + 1, v).height += increaser / 2;
 
-        getColumn(mColumns, i - 1, j).height += increaser / 2;
-        getColumn(mColumns, i, j).height += increaser;
-        getColumn(mColumns, i + 1, j).height += increaser / 2;
-
-        getColumn(mColumns, i - 1, j + 1).height += increaser / 2;
-        getColumn(mColumns, i, j + 1).height += increaser / 2;
-        getColumn(mColumns, i + 1, j + 1).height += increaser / 2;
+        getColumn(mColumns, u - 1, v + 1).height += increaser / 2;
+        getColumn(mColumns, u, v + 1).height += increaser / 2;
+        getColumn(mColumns, u + 1, v + 1).height += increaser / 2;
     }
 }
