@@ -25,6 +25,8 @@ public class HeightField {
     private float[] vertexArray;
     private float[] normalArray;
 
+    private List<Sphere> spheres = Lists.newArrayList();
+
     public HeightField() {
         initColumns();
         indices = indices();
@@ -59,7 +61,35 @@ public class HeightField {
         return columnArray[i][j];
     }
 
+    private Column getColumnFromXZ(Column[][] columnArray, int x, int z) {
+        x -= getPosition().getX();
+        z -= getPosition().getZ();
+
+        return getColumn(columnArray, (int) (x / COLUMN_WIDTH), (int) (z / COLUMN_WIDTH));
+    }
+
+    public Column getColumnFromXZ(int x, int z) {
+        return getColumnFromXZ(mColumns, x, z);
+    }
+
     public void update(float deltaT) {
+        for (Sphere sphere : spheres) {
+            Vec3 spherePos = sphere.getPosition();
+            float radius = sphere.getRadius();
+
+            float minX = spherePos.getX() - radius;
+            float maxX = spherePos.getX() + radius;
+            float minZ = spherePos.getZ() - radius;
+            float maxZ = spherePos.getZ() + radius;
+
+            int minI = (int) ((minX - getPosition().getX()) / COLUMN_WIDTH);
+            int maxI = (int) ((maxX - getPosition().getX()) / COLUMN_WIDTH);
+            int minJ = (int) ((minZ - getPosition().getZ()) / COLUMN_WIDTH);
+            int maxJ = (int) ((maxZ - getPosition().getZ()) / COLUMN_WIDTH);
+
+            // TODO: iterate over columns form min to max i, j and push them down according to sphere Y at columns position
+        }
+
         for (int j = 0; j < DIMENSION; j++) {
             for (int i = 0; i < DIMENSION; i++) {
                 Column center = getColumn(mColumns, i, j);
@@ -226,5 +256,9 @@ public class HeightField {
         getColumn(mColumns, u - 1, v + 1).height += increaser / 2;
         getColumn(mColumns, u, v + 1).height += increaser / 2;
         getColumn(mColumns, u + 1, v + 1).height += increaser / 2;
+    }
+
+    public void addSphere(Sphere sphere) {
+        spheres.add(sphere);
     }
 }
