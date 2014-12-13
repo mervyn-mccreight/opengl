@@ -22,6 +22,7 @@ public class RenderLoop implements GLEventListener, KeyListener {
     private final HeightField heightField;
     private final IntBuffer vertexBuffer = IntBuffer.allocate(1);
     private final IntBuffer normalBuffer = IntBuffer.allocate(1);
+    private final Sphere sphere;
     private long lastTime = System.currentTimeMillis();
     private int programId;
     private Mat4 view;
@@ -29,6 +30,7 @@ public class RenderLoop implements GLEventListener, KeyListener {
 
     public RenderLoop() {
         heightField = new HeightField();
+        sphere = new Sphere(new Vec3(0, 0, 0), 5);
     }
 
     @Override
@@ -146,16 +148,70 @@ public class RenderLoop implements GLEventListener, KeyListener {
     private void render(GLAutoDrawable drawable) {
         GL2 gl2 = drawable.getGL().getGL2();
 
-        float[] vertexArray = heightField.getVertexArray();
+        renderHeightField(gl2);
+        renderSphere(gl2);
+    }
 
+    private void renderSphere(GL2 gl2) {
+        Mat4 model = Mat4.MAT4_IDENTITY;
+        model = model.multiply(sphere.getScaleMatrix());
+        model = model.translate(sphere.getPosition());
+        int modelId = gl2.glGetUniformLocation(programId, "M");
+        gl2.glUniformMatrix4fv(modelId, 1, false, model.getBuffer());
+
+        float[] vertexArray = sphere.getVertexArray();
+
+        int vertexBufferId = vertexBuffer.get(0);
+        gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, vertexBufferId);
+        gl2.glBufferData(GL2.GL_ARRAY_BUFFER, vertexArray.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(vertexArray), GL2.GL_DYNAMIC_DRAW);
+
+        float[] normalArray = sphere.getNormals();
+
+        int normalBufferId = normalBuffer.get();
+        gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, normalBufferId);
+        gl2.glBufferData(GL2.GL_ARRAY_BUFFER, normalArray.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(normalArray), GL2.GL_DYNAMIC_DRAW);
+
+        //render objects here.
+        gl2.glEnableVertexAttribArray(0);
+        gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, vertexBufferId);
+        gl2.glVertexAttribPointer(0,    // index of attribute (vertex, color...)
+                3,    // number of vertices
+                GL2.GL_FLOAT,  // type
+                false, // normalized?
+                0,    // stride (Schrittweite)
+                0);   // offset
+
+        gl2.glEnableVertexAttribArray(2);
+        gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, normalBufferId);
+        gl2.glVertexAttribPointer(2,
+                3,
+                GL2.GL_FLOAT,
+                false,
+                0,
+                0);
+
+        gl2.glDrawArrays(GL2.GL_POINTS, 0, vertexArray.length / 3); // starting from 0, 12*3 vertices total
+        gl2.glDisableVertexAttribArray(0);
+        gl2.glDisableVertexAttribArray(2);
+
+        vertexBuffer.clear();
+        normalBuffer.clear();
+    }
+
+    private void renderHeightField(GL2 gl2) {
+        Mat4 model = Mat4.MAT4_IDENTITY;
+        model = model.multiply(heightField.getScaleMatrix());
+        model = model.translate(heightField.getPosition());
+        int modelId = gl2.glGetUniformLocation(programId, "M");
+        gl2.glUniformMatrix4fv(modelId, 1, false, model.getBuffer());
+
+        float[] vertexArray = heightField.getVertexArray();
 
         int vertexBufferId = vertexBuffer.get(0);
         gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, vertexBufferId);
         gl2.glBufferData(GL2.GL_ARRAY_BUFFER, vertexArray.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(vertexArray), GL2.GL_DYNAMIC_DRAW);
 
         float[] normalArray = heightField.getNormals();
-//        float[] normalArray = new float[vertexArray.length];
-
 
         int normalBufferId = normalBuffer.get();
         gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, normalBufferId);
@@ -195,19 +251,11 @@ public class RenderLoop implements GLEventListener, KeyListener {
     private void update(GLAutoDrawable drawable, float deltaT) {
         heightField.update(deltaT);
 
-        Mat4 model = Mat4.MAT4_IDENTITY;
-
-        model = model.multiply(heightField.getScaleMatrix());
-        model = model.translate(heightField.getPosition());
-
-
         GL2 gl2 = drawable.getGL().getGL2();
 
-        int modelId = gl2.glGetUniformLocation(programId, "M");
         int viewId = gl2.glGetUniformLocation(programId, "V");
         int projectionId = gl2.glGetUniformLocation(programId, "P");
 
-        gl2.glUniformMatrix4fv(modelId, 1, false, model.getBuffer());
         gl2.glUniformMatrix4fv(viewId, 1, false, view.getBuffer());
         gl2.glUniformMatrix4fv(projectionId, 1, false, projection.getBuffer());
 

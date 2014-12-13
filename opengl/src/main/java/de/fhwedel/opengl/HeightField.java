@@ -85,12 +85,14 @@ public class HeightField {
             }
         }
 
+        // Scaling
         for (int j = 0; j < DIMENSION; j++) {
             for (int i = 0; i < DIMENSION; i++) {
                 getColumn(mColumns, i, j).velocity *= SCALING_FACTOR;
             }
         }
 
+//        // Clamping
 //        for (int j = 0; j < DIMENSION; j++) {
 //            for (int i = 0; i < DIMENSION; i++) {
 //                Column center = getColumn(mColumns, i, j);
