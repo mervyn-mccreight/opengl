@@ -31,7 +31,7 @@ public class Sphere {
     }
 
     public float getY(float x, float z) {
-        return (float) Math.sqrt(Math.pow(x-position.getX(), 2) + Math.pow(z-position.getZ(), 2) - Math.pow(radius, 2)) - position.getY();
+        return (float) -Math.sqrt(Math.pow(x-position.getX(), 2) + Math.pow(z-position.getZ(), 2) - Math.pow(radius, 2)) + position.getY();
     }
 
     public float getRadius() {
