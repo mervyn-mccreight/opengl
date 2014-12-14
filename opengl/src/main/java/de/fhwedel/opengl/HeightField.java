@@ -13,7 +13,7 @@ public class HeightField {
     public static final float COLUMN_HEIGHT = DIMENSION / 100;
     public static final float COLUMN_WIDTH = 1f;
     private static final Vec3 INITIAL_POSITION = new Vec3(-COLUMN_WIDTH * DIMENSION / 2, -COLUMN_HEIGHT, -COLUMN_WIDTH * DIMENSION / 2);
-    private static final float SPEED = COLUMN_WIDTH * 30;
+    private static final float SPEED = COLUMN_WIDTH * 20;
     public static final int COLUMN_VELOCITY = 0;
     public static final float MAX_SLOPE = 0.3f;
     private static final float SCALING_FACTOR = 0.98f;
@@ -88,6 +88,31 @@ public class HeightField {
             int maxJ = (int) ((maxZ - getPosition().getZ()) / COLUMN_WIDTH);
 
             // TODO: iterate over columns form min to max i, j and push them down according to sphere Y at columns position
+
+            double volume = 0;
+            for (int i = minI; i < maxI; i++) {
+                for (int j = minJ; j < maxJ; j++) {
+                    Column column = getColumn(mColumns, i, j);
+                    float x = (float) ((i + 0.5) * COLUMN_WIDTH) + getPosition().getX();
+                    float y = column.height  + getPosition().getY();
+                    float z = (float) ((j + 0.5) * COLUMN_WIDTH) + getPosition().getZ();
+
+                    if (sphere.contains(x, y, z)) {
+                        volume += column.height - sphere.getY(x, z);
+                        column.height = sphere.getY(x, z);
+                    }
+                }
+            }
+
+            int count = 2 * (maxI-minI+2) + 2 * (maxJ-minJ+2); // dark magic
+            for (int i = minI - 1; i < maxI + 1; i++) {
+                for (int j = minJ - 1; j < maxJ + 1; j++) {
+                    if (i == minI-1 || i == maxI+1 || j == minJ-1 || j == maxJ+1) {
+                        Column column = getColumn(mColumns, i, j);
+                        column.height += volume / count;
+                    }
+                }
+            }
         }
 
         for (int j = 0; j < DIMENSION; j++) {

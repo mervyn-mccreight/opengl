@@ -30,7 +30,8 @@ public class RenderLoop implements GLEventListener, KeyListener {
 
     public RenderLoop() {
         heightField = new HeightField();
-        sphere = new Sphere(new Vec3(0, 0, 0), 5);
+        sphere = new Sphere(new Vec3(0, 0, 0), 2);
+        heightField.addSphere(sphere);
     }
 
     @Override
