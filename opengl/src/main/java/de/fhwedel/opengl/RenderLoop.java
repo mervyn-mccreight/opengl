@@ -19,18 +19,19 @@ import java.nio.IntBuffer;
 
 public class RenderLoop implements GLEventListener, KeyListener {
 
+    public static final Vec3 GRAVITY = new Vec3(0, -9.81f, 0);
     private final HeightField heightField;
     private final IntBuffer vertexBuffer = IntBuffer.allocate(1);
     private final IntBuffer normalBuffer = IntBuffer.allocate(1);
     private final Sphere sphere;
-    private long lastTime = System.currentTimeMillis();
+    private long lastTime;
     private int programId;
     private Mat4 view;
     private Mat4 projection;
 
     public RenderLoop() {
         heightField = new HeightField();
-        sphere = new Sphere(new Vec3(0, 0, 0), 2);
+        sphere = new Sphere(new Vec3(0, 3, 0), 2);
         heightField.addSphere(sphere);
     }
 
@@ -71,6 +72,8 @@ public class RenderLoop implements GLEventListener, KeyListener {
                 0.1f,
                 100f
         );
+
+        lastTime = System.currentTimeMillis();
     }
 
     private int loadShaders(GL2 gl2) {
@@ -251,6 +254,7 @@ public class RenderLoop implements GLEventListener, KeyListener {
 
     private void update(GLAutoDrawable drawable, float deltaT) {
         heightField.update(deltaT);
+        sphere.update(deltaT);
 
         GL2 gl2 = drawable.getGL().getGL2();
 
@@ -310,6 +314,24 @@ public class RenderLoop implements GLEventListener, KeyListener {
         switch (e.getKeyCode()) {
             case KeyEvent.VK_SPACE:
                 this.heightField.sprinkle();
+                break;
+            case KeyEvent.VK_LEFT:
+                sphere.moveBy(new Vec3(-0.1f, 0, 0));
+                break;
+            case KeyEvent.VK_RIGHT:
+                sphere.moveBy(new Vec3(0.1f, 0, 0));
+                break;
+            case KeyEvent.VK_UP:
+                sphere.moveBy(new Vec3(0, 0, -0.1f));
+                break;
+            case KeyEvent.VK_DOWN:
+                sphere.moveBy(new Vec3(0, 0, 0.1f));
+                break;
+            case KeyEvent.VK_PAGE_UP:
+                sphere.moveBy(new Vec3(0, 0.1f, 0));
+                break;
+            case KeyEvent.VK_PAGE_DOWN:
+                sphere.moveBy(new Vec3(0, -0.1f, 0));
                 break;
             default:
                 break;

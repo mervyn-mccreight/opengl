@@ -18,6 +18,7 @@ public class HeightField {
     public static final float MAX_SLOPE = 0.3f;
     private static final float SCALING_FACTOR = 0.98f;
     private static final float INITIAL_SCALE = 0.3f;
+    private static final float WATER_DENSITY = 0.3f;
     private final List<Integer> indices;
 
     private Column[][] mColumns;
@@ -89,17 +90,18 @@ public class HeightField {
 
             // TODO: iterate over columns form min to max i, j and push them down according to sphere Y at columns position
 
-            double volume = 0;
+            float volume = 0;
             for (int i = minI; i < maxI; i++) {
                 for (int j = minJ; j < maxJ; j++) {
                     Column column = getColumn(mColumns, i, j);
-                    float x = (float) ((i + 0.5) * COLUMN_WIDTH) + getPosition().getX();
+                    float x = (i * COLUMN_WIDTH) + getPosition().getX();
                     float y = column.height  + getPosition().getY();
-                    float z = (float) ((j + 0.5) * COLUMN_WIDTH) + getPosition().getZ();
+                    float z = (j * COLUMN_WIDTH) + getPosition().getZ();
 
-                    if (sphere.contains(x, y, z)) {
+                    if (sphere.isBelow(x, y, z)) {
                         volume += column.height - sphere.getY(x, z);
                         column.height = sphere.getY(x, z);
+                        column.velocity = 0;
                     }
                 }
             }
@@ -113,6 +115,9 @@ public class HeightField {
                     }
                 }
             }
+
+            Vec3 force = new Vec3(0, -volume * COLUMN_WIDTH * COLUMN_WIDTH * WATER_DENSITY * RenderLoop.GRAVITY.getY(), 0);
+            sphere.applyForce(force);
         }
 
         for (int j = 0; j < DIMENSION; j++) {

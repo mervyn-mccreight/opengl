@@ -10,11 +10,16 @@ public class Sphere {
     private static final int SECTORS = 100;
     private static final float S = 1f/(SECTORS-1);
     private static final float INITIAL_SCALE = 0.3f;
+
+    private static final float MASS = 1f;
+
     private final float[] vertexArray;
     private final float[] normalArray;
 
     private float radius;
     private Vec3 position;
+    private Vec3 velocity = Vec3.VEC3_ZERO;
+    private Vec3 force = Vec3.VEC3_ZERO;
 
     public Sphere(Vec3 position, float radius) {
         this.radius = radius;
@@ -29,8 +34,18 @@ public class Sphere {
         return vec.getLength() <= radius;
     }
 
+    public boolean isBelow(float x, float y, float z) {
+        Float sphereY = getY(x, z);
+        if (sphereY.equals(Float.NaN)) {
+            return false;
+        }
+
+        boolean b = sphereY <= y;
+        return b;
+    }
+
     public float getY(float x, float z) {
-        float v = (float) -Math.sqrt(Math.pow(radius, 2) - Math.pow(x - position.getX(), 2) - Math.pow(z - position.getZ(), 2)) - position.getY();
+        float v = (float) -Math.sqrt(Math.pow(radius, 2) - Math.pow(x - position.getX(), 2) - Math.pow(z - position.getZ(), 2)) + position.getY();
         return v;
     }
 
@@ -40,6 +55,10 @@ public class Sphere {
 
     public Vec3 getPosition() {
         return position;
+    }
+
+    public void moveBy(Vec3 vec) {
+        position = position.add(vec);
     }
 
     public float[] getVertexArray() {
@@ -83,5 +102,15 @@ public class Sphere {
                 new Vec4(0, INITIAL_SCALE, 0, 0),
                 new Vec4(0, 0, INITIAL_SCALE, 0),
                 new Vec4(0, 0, 0, 1));
+    }
+
+    public void update(float deltaT) {
+        Vec3 acceleration = force.scale(1/MASS);
+        position = position.add(velocity.scale(deltaT));
+        velocity = velocity.add(acceleration.scale(deltaT));
+    }
+
+    public void applyForce(Vec3 force) {
+        this.force = RenderLoop.GRAVITY.add(force);
     }
 }
