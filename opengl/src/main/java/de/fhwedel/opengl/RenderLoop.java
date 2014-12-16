@@ -244,7 +244,7 @@ public class RenderLoop implements GLEventListener, KeyListener {
                 0,
                 0);
 
-        gl2.glDrawArrays(GL2.GL_TRIANGLES, 0, vertexArray.length / 3); // starting from 0, 12*3 vertices total
+        gl2.glDrawArrays(GL2.GL_POINTS, 0, vertexArray.length / 3); // starting from 0, 12*3 vertices total
         gl2.glDisableVertexAttribArray(0);
         gl2.glDisableVertexAttribArray(2);
 

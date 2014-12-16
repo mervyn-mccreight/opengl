@@ -12,13 +12,13 @@ public class HeightField {
     public static final int DIMENSION = 100;
     public static final float COLUMN_HEIGHT = DIMENSION / 100;
     public static final float COLUMN_WIDTH = 1f;
-    private static final Vec3 INITIAL_POSITION = new Vec3(-COLUMN_WIDTH * DIMENSION / 2, -COLUMN_HEIGHT, -COLUMN_WIDTH * DIMENSION / 2);
-    private static final float SPEED = COLUMN_WIDTH * 20;
     public static final int COLUMN_VELOCITY = 0;
     public static final float MAX_SLOPE = 0.3f;
+    private static final Vec3 INITIAL_POSITION = new Vec3(-COLUMN_WIDTH * DIMENSION / 2, -COLUMN_HEIGHT, -COLUMN_WIDTH * DIMENSION / 2);
+    private static final float SPEED = COLUMN_WIDTH * 20;
     private static final float SCALING_FACTOR = 0.98f;
     private static final float INITIAL_SCALE = 0.3f;
-    private static final float WATER_DENSITY = 0.3f;
+    private static final float WATER_DENSITY = 0.2f;
     private final List<Integer> indices;
 
     private Column[][] mColumns;
@@ -74,51 +74,6 @@ public class HeightField {
     }
 
     public void update(float deltaT) {
-        for (Sphere sphere : spheres) {
-            Vec3 spherePos = sphere.getPosition();
-            float radius = sphere.getRadius();
-
-            float minX = spherePos.getX() - radius;
-            float maxX = spherePos.getX() + radius;
-            float minZ = spherePos.getZ() - radius;
-            float maxZ = spherePos.getZ() + radius;
-
-            int minI = (int) ((minX - getPosition().getX()) / COLUMN_WIDTH);
-            int maxI = (int) ((maxX - getPosition().getX()) / COLUMN_WIDTH);
-            int minJ = (int) ((minZ - getPosition().getZ()) / COLUMN_WIDTH);
-            int maxJ = (int) ((maxZ - getPosition().getZ()) / COLUMN_WIDTH);
-
-            // TODO: iterate over columns form min to max i, j and push them down according to sphere Y at columns position
-
-            float volume = 0;
-            for (int i = minI; i < maxI; i++) {
-                for (int j = minJ; j < maxJ; j++) {
-                    Column column = getColumn(mColumns, i, j);
-                    float x = (i * COLUMN_WIDTH) + getPosition().getX();
-                    float y = column.height  + getPosition().getY();
-                    float z = (j * COLUMN_WIDTH) + getPosition().getZ();
-
-                    if (sphere.isBelow(x, y, z)) {
-                        volume += column.height - sphere.getY(x, z);
-                        column.height = sphere.getY(x, z);
-                        column.velocity = 0;
-                    }
-                }
-            }
-
-            int count = 2 * (maxI-minI+2) + 2 * (maxJ-minJ+2); // dark magic
-            for (int i = minI - 1; i < maxI + 1; i++) {
-                for (int j = minJ - 1; j < maxJ + 1; j++) {
-                    if (i == minI-1 || i == maxI+1 || j == minJ-1 || j == maxJ+1) {
-                        Column column = getColumn(mColumns, i, j);
-                        column.height += volume / count;
-                    }
-                }
-            }
-
-            Vec3 force = new Vec3(0, -volume * COLUMN_WIDTH * COLUMN_WIDTH * WATER_DENSITY * RenderLoop.GRAVITY.getY(), 0);
-            sphere.applyForce(force);
-        }
 
         for (int j = 0; j < DIMENSION; j++) {
             for (int i = 0; i < DIMENSION; i++) {
@@ -182,6 +137,58 @@ public class HeightField {
                 getColumn(mColumns, i, j).normal = getNormalFor(i, j);
             }
         }
+
+        for (Sphere sphere : spheres) {
+            Vec3 spherePos = sphere.getPosition();
+            float radius = sphere.getRadius();
+
+            float minX = spherePos.getX() - radius;
+            float maxX = spherePos.getX() + radius;
+            float minZ = spherePos.getZ() - radius;
+            float maxZ = spherePos.getZ() + radius;
+
+            int minI = (int) ((minX - getPosition().getX()) / COLUMN_WIDTH);
+            int maxI = (int) ((maxX - getPosition().getX()) / COLUMN_WIDTH);
+            int minJ = (int) ((minZ - getPosition().getZ()) / COLUMN_WIDTH);
+            int maxJ = (int) ((maxZ - getPosition().getZ()) / COLUMN_WIDTH);
+
+            // TODO: iterate over columns form min to max i, j and push them down according to sphere Y at columns position
+
+            float volume = 0;
+            for (int i = minI; i < maxI; i++) {
+                for (int j = minJ; j < maxJ; j++) {
+                    Column column = getColumn(mColumns, i, j);
+                    float x = (i * COLUMN_WIDTH) + getPosition().getX();
+                    float y = column.height  + getPosition().getY();
+                    float z = (j * COLUMN_WIDTH) + getPosition().getZ();
+
+                    if (sphere.isBelow(x, y, z)) {
+                        float difference = column.height - sphere.getY(x, z);
+                        volume += difference;
+                        column.velocity = -difference;
+                        column.height = sphere.getY(x, z);
+                    }
+                }
+            }
+
+            int actualCount = 0;
+            float volume2 = 0f;
+            int count = 2 * (maxI-minI+2) + 2 * (maxJ-minJ+2); // dark magic
+            for (int i = minI - 1; i <= maxI + 1; i++) {
+                for (int j = minJ - 1; j <= maxJ + 1; j++) {
+                    if (i == minI-1 || i == maxI+1 || j == minJ-1 || j == maxJ+1) {
+                        ++actualCount;
+                        Column column = getColumn(mColumns, i, j);
+                        volume2 += volume/count;
+                        column.height += volume / count;
+                    }
+                }
+            }
+
+            Vec3 force = new Vec3(0, -volume * COLUMN_WIDTH * COLUMN_WIDTH * WATER_DENSITY * RenderLoop.GRAVITY.getY(), 0);
+            sphere.applyForce(force);
+        }
+
 
     }
 
