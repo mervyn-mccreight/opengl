@@ -22,6 +22,7 @@ public class HeightField {
     private static final float INITIAL_SCALE = 0.3f;
     private static final float WATER_DENSITY = 0.8f;
     private final List<Integer> indices;
+    private final World world;
 
     private Column[][] mColumns;
     private Column[][] mNewColumns;
@@ -30,7 +31,8 @@ public class HeightField {
 
     private List<Sphere> spheres = Lists.newArrayList();
 
-    public HeightField() {
+    public HeightField(World world) {
+        this.world = world;
         initColumns();
         indices = indices();
         vertexArray = new float[indices.size() * 3];
@@ -46,7 +48,6 @@ public class HeightField {
 
         for (int j = 0; j < DIMENSION; j++) {
             for (int i = 0; i < DIMENSION; i++) {
-//                float y = Math.max(COLUMN_HEIGHT - 0.01f * (i*i + j*j), 0);
                 float y = (float) Math.random() * 0.00f;
 
                 mColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY, new float[3]);
@@ -117,7 +118,7 @@ public class HeightField {
                         column.height = sphere.getY(x, z) - getPosition().getY();
                         column.velocity = -difference;
 
-                        Vec3 force = new Vec3(0, -difference * COLUMN_WIDTH * COLUMN_WIDTH * WATER_DENSITY * RenderLoop.GRAVITY.getY(), 0);
+                        Vec3 force = new Vec3(0, -difference * COLUMN_WIDTH * COLUMN_WIDTH * WATER_DENSITY * world.getGravity().getY(), 0);
                         sphere.applyForce(force);
                     }
                 }
