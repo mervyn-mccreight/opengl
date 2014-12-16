@@ -12,15 +12,15 @@ import static java.lang.Math.pow;
 
 public class HeightField {
     public static final int DIMENSION = 100;
-    public static final float COLUMN_HEIGHT = DIMENSION / 100;
+    public static final float COLUMN_HEIGHT = DIMENSION;
     public static final float COLUMN_WIDTH = 1f;
     private static final Vec3 INITIAL_POSITION = new Vec3(-COLUMN_WIDTH * DIMENSION / 2, -COLUMN_HEIGHT, -COLUMN_WIDTH * DIMENSION / 2);
-    private static final float SPEED = COLUMN_WIDTH * 30;
+    private static final float SPEED = COLUMN_WIDTH * 20;
     public static final int COLUMN_VELOCITY = 0;
     public static final float MAX_SLOPE = 0.3f;
     private static final float SCALING_FACTOR = 0.98f;
     private static final float INITIAL_SCALE = 0.3f;
-    private static final float WATER_DENSITY = 0.2f;
+    private static final float WATER_DENSITY = 0.8f;
     private final List<Integer> indices;
 
     private Column[][] mColumns;
@@ -76,9 +76,16 @@ public class HeightField {
     }
 
     public void update(float deltaT) {
+        System.out.println("===============================");
+        System.out.println("Volume before: " + calcVolume());
+
         applyLogic(deltaT);
+
         calculateNormals();
         applySphereInteraction();
+
+        System.out.println("Volume after: " + calcVolume());
+        System.out.println("===============================");
     }
 
     private void applySphereInteraction() {
@@ -105,10 +112,13 @@ public class HeightField {
                     float z = (j * COLUMN_WIDTH) + getPosition().getZ();
 
                     if (sphere.isBelow(x, y, z)) {
-                        float difference = column.height - sphere.getY(x, z);
+                        float difference = y - sphere.getY(x, z);
                         volume += difference;
+                        column.height = sphere.getY(x, z) - getPosition().getY();
                         column.velocity = -difference;
-                        column.height = sphere.getY(x, z);
+
+                        Vec3 force = new Vec3(0, -difference * COLUMN_WIDTH * COLUMN_WIDTH * WATER_DENSITY * RenderLoop.GRAVITY.getY(), 0);
+                        sphere.applyForce(force);
                     }
                 }
             }
@@ -126,10 +136,18 @@ public class HeightField {
                     }
                 }
             }
-
-            Vec3 force = new Vec3(0, -volume * COLUMN_WIDTH * COLUMN_WIDTH * WATER_DENSITY * RenderLoop.GRAVITY.getY(), 0);
-            sphere.applyForce(force);
         }
+    }
+
+    private float calcVolume() {
+        float volume = 0f;
+        for (int i = 0; i < DIMENSION; i++) {
+            for (int j = 0; j < DIMENSION; j++) {
+                volume += getColumn(mColumns, i, j).height * COLUMN_WIDTH * COLUMN_WIDTH;
+            }
+        }
+
+        return volume;
     }
 
     private void calculateNormals() {
@@ -155,7 +173,7 @@ public class HeightField {
                 center.velocity *= SCALING_FACTOR;
 
                 Column newColumn = getColumn(mNewColumns, i, j);
-                newColumn.height = center.height + center.velocity * deltaT;
+                newColumn.height = center.height + center.velocity * deltaT * (1/SCALING_FACTOR) ;
             }
         }
 

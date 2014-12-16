@@ -19,7 +19,7 @@ import java.nio.IntBuffer;
 
 public class RenderLoop implements GLEventListener, KeyListener {
 
-    public static final Vec3 GRAVITY = new Vec3(0, -9.81f, 0);
+    public static final Vec3 GRAVITY = new Vec3(0, 0f, 0);
     private final HeightField heightField;
     private final IntBuffer vertexBuffer = IntBuffer.allocate(1);
     private final IntBuffer normalBuffer = IntBuffer.allocate(1);
