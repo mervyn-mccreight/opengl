@@ -65,28 +65,16 @@ public class HeightField {
         return columnArray[i][j];
     }
 
-    private Column getColumnFromXZ(Column[][] columnArray, int x, int z) {
-        x -= getPosition().getX();
-        z -= getPosition().getZ();
-
-        return getColumn(columnArray, (int) (x / COLUMN_WIDTH), (int) (z / COLUMN_WIDTH));
-    }
-
-    public Column getColumnFromXZ(int x, int z) {
-        return getColumnFromXZ(mColumns, x, z);
-    }
-
     public void update(float deltaT) {
-        System.out.println("===============================");
-        System.out.println("Volume before: " + calcVolume());
+//        System.out.println("===============================");
+//        System.out.println("Volume before: " + calcVolume());
 
         applyLogic(deltaT);
-
         calculateNormals();
         applySphereInteraction();
 
-        System.out.println("Volume after: " + calcVolume());
-        System.out.println("===============================");
+//        System.out.println("Volume after: " + calcVolume());
+//        System.out.println("===============================");
     }
 
     private void applySphereInteraction() {
@@ -99,18 +87,18 @@ public class HeightField {
             float minZ = spherePos.getZ() - radius;
             float maxZ = spherePos.getZ() + radius;
 
-            int minI = (int) ((minZ - getPosition().getZ()) / COLUMN_WIDTH);
-            int maxI = (int) ((maxZ - getPosition().getZ()) / COLUMN_WIDTH);
             int minJ = (int) ((minX - getPosition().getX()) / COLUMN_WIDTH);
             int maxJ = (int) ((maxX - getPosition().getX()) / COLUMN_WIDTH);
+            int minI = (int) ((minZ - getPosition().getZ()) / COLUMN_WIDTH);
+            int maxI = (int) ((maxZ - getPosition().getZ()) / COLUMN_WIDTH);
 
             float volume = 0;
             for (int i = minI; i < maxI; i++) {
                 for (int j = minJ; j < maxJ; j++) {
                     Column column = getColumn(mColumns, i, j);
-                    float x = (i * COLUMN_WIDTH) + getPosition().getX();
+                    float x = (j * COLUMN_WIDTH) + getPosition().getX();
                     float y = column.height + getPosition().getY();
-                    float z = (j * COLUMN_WIDTH) + getPosition().getZ();
+                    float z = (i * COLUMN_WIDTH) + getPosition().getZ();
 
                     if (sphere.isBelow(x, y, z)) {
                         float difference = y - sphere.getY(x, z);
@@ -124,16 +112,13 @@ public class HeightField {
                 }
             }
 
-            int actualCount = 0;
-            float volume2 = 0f;
-            int count = 2 * (maxI - minI + 2) + 2 * (maxJ - minJ + 2); // dark magic
+            int countCircumferenceFields = 2*(maxI - minI + maxJ - minJ + 4); // the darkest magic ever seen.
+
             for (int i = minI - 1; i <= maxI + 1; i++) {
                 for (int j = minJ - 1; j <= maxJ + 1; j++) {
                     if (i == minI - 1 || i == maxI + 1 || j == minJ - 1 || j == maxJ + 1) {
-                        ++actualCount;
                         Column column = getColumn(mColumns, i, j);
-                        volume2 += volume / count;
-                        column.height += volume / count;
+                        column.height += volume / countCircumferenceFields;
                     }
                 }
             }
