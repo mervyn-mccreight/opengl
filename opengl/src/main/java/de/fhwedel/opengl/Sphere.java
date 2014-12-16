@@ -13,8 +13,7 @@ public class Sphere {
     private static final int SECTORS = 10;
     private static final float S = 1f/(SECTORS-1);
     private static final float INITIAL_SCALE = 0.3f;
-
-    private static final float MASS = 1f;
+    private static final float DENSITY = 0.0001f;
 
     private final float[] vertexArray;
     private final float[] normalArray;
@@ -38,7 +37,7 @@ public class Sphere {
     }
 
     public boolean isBelow(float x, float y, float z) {
-        Float sphereY = getY(x, z);
+        Float sphereY = getBottomHalfY(x, z);
         if (sphereY.equals(Float.NaN)) {
             return false;
         }
@@ -47,7 +46,12 @@ public class Sphere {
         return b;
     }
 
-    public float getY(float x, float z) {
+    public float getTopHalfY(float x, float z) {
+        float v = (float) Math.sqrt(Math.pow(radius, 2) - Math.pow(x - position.getX(), 2) - Math.pow(z - position.getZ(), 2)) + position.getY();
+        return v;
+    }
+
+    public float getBottomHalfY(float x, float z) {
         float v = (float) -Math.sqrt(Math.pow(radius, 2) - Math.pow(x - position.getX(), 2) - Math.pow(z - position.getZ(), 2)) + position.getY();
         return v;
     }
@@ -114,7 +118,9 @@ public class Sphere {
             force = force.add(vec3);
         }
 
-        Vec3 acceleration = force.scale(1/MASS);
+        float mass = (float) ((4 / 3 * Math.PI) * Math.pow(radius, 3)) * DENSITY;
+
+        Vec3 acceleration = force.scale(1f/mass);
 
         position = position.add(velocity.scale(deltaT));
         velocity = velocity.add(acceleration.scale(deltaT));

@@ -20,7 +20,7 @@ public class HeightField {
     public static final float MAX_SLOPE = 0.3f;
     private static final float SCALING_FACTOR = 0.98f;
     private static final float INITIAL_SCALE = 0.3f;
-    private static final float WATER_DENSITY = 0.8f;
+    private static final float WATER_DENSITY = 0.0001f;
     private final List<Integer> indices;
     private final World world;
 
@@ -50,8 +50,8 @@ public class HeightField {
             for (int i = 0; i < DIMENSION; i++) {
                 float y = (float) Math.random() * 0.00f;
 
-                mColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY, new float[3]);
-                mNewColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY, new float[3]);
+                mColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY, 0f, 0f, new float[3]);
+                mNewColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY, 0f, 0f, new float[3]);
             }
         }
     }
@@ -92,7 +92,6 @@ public class HeightField {
             int minI = (int) ((minZ - getPosition().getZ()) / COLUMN_WIDTH);
             int maxI = (int) ((maxZ - getPosition().getZ()) / COLUMN_WIDTH);
 
-            float volume = 0;
             for (int i = minI; i < maxI; i++) {
                 for (int j = minJ; j < maxJ; j++) {
                     Column column = getColumn(mColumns, i, j);
@@ -101,24 +100,22 @@ public class HeightField {
                     float z = (i * COLUMN_WIDTH) + getPosition().getZ();
 
                     if (sphere.isBelow(x, y, z)) {
-                        float difference = y - sphere.getY(x, z);
-                        volume += difference;
-                        column.height = sphere.getY(x, z) - getPosition().getY();
-                        column.velocity = -difference;
+                        float sphereDepthInWater = y - sphere.getBottomHalfY(x, z);
+                        if (sphere.getTopHalfY(x, z) <= y) {
+                            float newReplaced = sphere.getTopHalfY(x, z) - sphere.getBottomHalfY(x, z);
+                            column.replacedDelta = newReplaced - column.replaced;
+                            column.replaced = newReplaced;
+                        } else {
+                            float newReplaced = sphereDepthInWater;
+                            column.replacedDelta = newReplaced - column.replaced;
+                            column.replaced = newReplaced;
+                        }
 
-                        Vec3 force = new Vec3(0, -difference * COLUMN_WIDTH * COLUMN_WIDTH * WATER_DENSITY * world.getGravity().getY(), 0);
+                        Vec3 force = new Vec3(0, -sphereDepthInWater * COLUMN_WIDTH * COLUMN_WIDTH * WATER_DENSITY * world.getGravity().getY(), 0);
                         sphere.applyForce(force);
-                    }
-                }
-            }
-
-            int countCircumferenceFields = 2*(maxI - minI + maxJ - minJ + 4); // the darkest magic ever seen.
-
-            for (int i = minI - 1; i <= maxI + 1; i++) {
-                for (int j = minJ - 1; j <= maxJ + 1; j++) {
-                    if (i == minI - 1 || i == maxI + 1 || j == minJ - 1 || j == maxJ + 1) {
-                        Column column = getColumn(mColumns, i, j);
-                        column.height += volume / countCircumferenceFields;
+                    } else {
+                        column.replaced = 0;
+                        column.replacedDelta = 0;
                     }
                 }
             }
@@ -166,11 +163,28 @@ public class HeightField {
         for (int j = 0; j < DIMENSION; j++) {
             for (int i = 0; i < DIMENSION; i++) {
                 Column column = getColumn(mColumns, i, j);
+                Column left = getColumn(mNewColumns, i - 1, j);
+                Column right = getColumn(mNewColumns, i + 1, j);
+                Column top = getColumn(mNewColumns, i, j - 1);
+                Column bottom = getColumn(mNewColumns, i, j + 1);
+
+                left.height += column.replacedDelta / 4;
+                right.height += column.replacedDelta / 4;
+                top.height += column.replacedDelta / 4;
+                bottom.height += column.replacedDelta / 4;
+            }
+        }
+
+        for (int j = 0; j < DIMENSION; j++) {
+            for (int i = 0; i < DIMENSION; i++) {
+                Column column = getColumn(mColumns, i, j);
                 Column newColumn = getColumn(mNewColumns, i, j);
 
                 column.height = newColumn.height;
             }
         }
+
+
     }
 
     public float[] getVertexArray() {

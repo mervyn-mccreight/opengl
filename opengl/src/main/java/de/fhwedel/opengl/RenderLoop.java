@@ -33,7 +33,7 @@ public class RenderLoop implements GLEventListener, KeyListener {
     public RenderLoop() {
         world = new World();
         heightField = new HeightField(world);
-        sphere = new Sphere(new Vec3(0, 3, 0), 2);
+        sphere = new Sphere(new Vec3(0, 50, 0), 10);
         heightField.addSphere(sphere);
     }
 
