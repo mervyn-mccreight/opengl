@@ -1,8 +1,11 @@
 package de.fhwedel.opengl;
 
+import com.google.common.collect.Lists;
 import com.hackoeur.jglm.Mat4;
 import com.hackoeur.jglm.Vec3;
 import com.hackoeur.jglm.Vec4;
+
+import java.util.List;
 
 public class Sphere {
     private static final int RINGS = 100;
@@ -19,7 +22,7 @@ public class Sphere {
     private float radius;
     private Vec3 position;
     private Vec3 velocity = Vec3.VEC3_ZERO;
-    private Vec3 force = Vec3.VEC3_ZERO;
+    private List<Vec3> forces = Lists.newArrayList();
 
     public Sphere(Vec3 position, float radius) {
         this.radius = radius;
@@ -105,12 +108,21 @@ public class Sphere {
     }
 
     public void update(float deltaT) {
+        Vec3 force = Vec3.VEC3_ZERO;
+
+        for (Vec3 vec3 : forces) {
+            force = force.add(vec3);
+        }
+
         Vec3 acceleration = force.scale(1/MASS);
+
         position = position.add(velocity.scale(deltaT));
         velocity = velocity.add(acceleration.scale(deltaT));
+
+        this.forces.clear();
     }
 
     public void applyForce(Vec3 force) {
-        this.force = RenderLoop.GRAVITY.add(force);
+        this.forces.add(force);
     }
 }
