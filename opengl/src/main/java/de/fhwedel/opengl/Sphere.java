@@ -10,10 +10,10 @@ import java.util.List;
 public class Sphere {
     private static final int RINGS = 100;
     private static final float R = 1f/(RINGS-1);
-    private static final int SECTORS = 10;
+    private static final int SECTORS = 100;
     private static final float S = 1f/(SECTORS-1);
     private static final float INITIAL_SCALE = 0.3f;
-    private static final float DENSITY = 0.0001f;
+    private static final float DENSITY = 0.01f;
 
     private final float[] vertexArray;
     private final float[] normalArray;

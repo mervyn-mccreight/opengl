@@ -20,7 +20,7 @@ public class HeightField {
     public static final float MAX_SLOPE = 0.3f;
     private static final float SCALING_FACTOR = 0.98f;
     private static final float INITIAL_SCALE = 0.3f;
-    private static final float WATER_DENSITY = 0.0001f;
+    private static final float WATER_DENSITY = 0.01f;
     private final List<Integer> indices;
     private final World world;
 
