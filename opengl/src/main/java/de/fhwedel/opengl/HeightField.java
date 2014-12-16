@@ -8,14 +8,16 @@ import com.jogamp.opengl.math.VectorUtil;
 
 import java.util.List;
 
+import static java.lang.Math.pow;
+
 public class HeightField {
     public static final int DIMENSION = 100;
     public static final float COLUMN_HEIGHT = DIMENSION / 100;
     public static final float COLUMN_WIDTH = 1f;
+    private static final Vec3 INITIAL_POSITION = new Vec3(-COLUMN_WIDTH * DIMENSION / 2, -COLUMN_HEIGHT, -COLUMN_WIDTH * DIMENSION / 2);
+    private static final float SPEED = COLUMN_WIDTH * 30;
     public static final int COLUMN_VELOCITY = 0;
     public static final float MAX_SLOPE = 0.3f;
-    private static final Vec3 INITIAL_POSITION = new Vec3(-COLUMN_WIDTH * DIMENSION / 2, -COLUMN_HEIGHT, -COLUMN_WIDTH * DIMENSION / 2);
-    private static final float SPEED = COLUMN_WIDTH * 20;
     private static final float SCALING_FACTOR = 0.98f;
     private static final float INITIAL_SCALE = 0.3f;
     private static final float WATER_DENSITY = 0.2f;
@@ -74,70 +76,12 @@ public class HeightField {
     }
 
     public void update(float deltaT) {
+        applyLogic(deltaT);
+        calculateNormals();
+        applySphereInteraction();
+    }
 
-        for (int j = 0; j < DIMENSION; j++) {
-            for (int i = 0; i < DIMENSION; i++) {
-                Column center = getColumn(mColumns, i, j);
-                Column left = getColumn(mColumns, i - 1, j);
-                Column right = getColumn(mColumns, i + 1, j);
-                Column top = getColumn(mColumns, i, j - 1);
-                Column bottom = getColumn(mColumns, i, j + 1);
-
-                double f = SPEED * SPEED * (left.height + right.height + top.height + bottom.height - 4 * center.height) / (COLUMN_WIDTH * COLUMN_WIDTH);
-
-                center.velocity += f * deltaT;
-                Column newColumn = getColumn(mNewColumns, i, j);
-                newColumn.height = center.height + center.velocity * deltaT;
-            }
-        }
-
-        for (int j = 0; j < DIMENSION; j++) {
-            for (int i = 0; i < DIMENSION; i++) {
-                Column column = getColumn(mColumns, i, j);
-                Column newColumn = getColumn(mNewColumns, i, j);
-
-                column.height = newColumn.height;
-            }
-        }
-
-        // Scaling
-        for (int j = 0; j < DIMENSION; j++) {
-            for (int i = 0; i < DIMENSION; i++) {
-                getColumn(mColumns, i, j).velocity *= SCALING_FACTOR;
-            }
-        }
-
-//        // Clamping
-//        for (int j = 0; j < DIMENSION; j++) {
-//            for (int i = 0; i < DIMENSION; i++) {
-//                Column center = getColumn(mColumns, i, j);
-//                Column left = getColumn(mColumns, i - 1, j);
-//                Column right = getColumn(mColumns, i + 1, j);
-//                Column top = getColumn(mColumns, i, j - 1);
-//                Column bottom = getColumn(mColumns, i, j + 1);
-//
-//                // (u[i+1,j]+u[i-1,j]+u[i,j+1]+u[i,j-1])/4 – u[i,j]
-//                // calculates average slope in all four directions
-//                double offset = (right.height + left.height + bottom.height + top.height) / 4 - center.height;
-//
-//                // maxslope is in percent between 0 and 1.
-//                double maxOffset = MAX_SLOPE * COLUMN_WIDTH;
-//
-//                if (offset > maxOffset) {
-//                    center.height += offset - maxOffset;
-//                } else if (offset < -maxOffset) {
-//                    center.height += offset + maxOffset;
-//                }
-//            }
-//        }
-
-
-        for (int j = 0; j < DIMENSION; j++) {
-            for (int i = 0; i < DIMENSION; i++) {
-                getColumn(mColumns, i, j).normal = getNormalFor(i, j);
-            }
-        }
-
+    private void applySphereInteraction() {
         for (Sphere sphere : spheres) {
             Vec3 spherePos = sphere.getPosition();
             float radius = sphere.getRadius();
@@ -159,7 +103,7 @@ public class HeightField {
                 for (int j = minJ; j < maxJ; j++) {
                     Column column = getColumn(mColumns, i, j);
                     float x = (i * COLUMN_WIDTH) + getPosition().getX();
-                    float y = column.height  + getPosition().getY();
+                    float y = column.height + getPosition().getY();
                     float z = (j * COLUMN_WIDTH) + getPosition().getZ();
 
                     if (sphere.isBelow(x, y, z)) {
@@ -173,13 +117,13 @@ public class HeightField {
 
             int actualCount = 0;
             float volume2 = 0f;
-            int count = 2 * (maxI-minI+2) + 2 * (maxJ-minJ+2); // dark magic
+            int count = 2 * (maxI - minI + 2) + 2 * (maxJ - minJ + 2); // dark magic
             for (int i = minI - 1; i <= maxI + 1; i++) {
                 for (int j = minJ - 1; j <= maxJ + 1; j++) {
-                    if (i == minI-1 || i == maxI+1 || j == minJ-1 || j == maxJ+1) {
+                    if (i == minI - 1 || i == maxI + 1 || j == minJ - 1 || j == maxJ + 1) {
                         ++actualCount;
                         Column column = getColumn(mColumns, i, j);
-                        volume2 += volume/count;
+                        volume2 += volume / count;
                         column.height += volume / count;
                     }
                 }
@@ -188,8 +132,43 @@ public class HeightField {
             Vec3 force = new Vec3(0, -volume * COLUMN_WIDTH * COLUMN_WIDTH * WATER_DENSITY * RenderLoop.GRAVITY.getY(), 0);
             sphere.applyForce(force);
         }
+    }
 
+    private void calculateNormals() {
+        for (int j = 0; j < DIMENSION; j++) {
+            for (int i = 0; i < DIMENSION; i++) {
+                getColumn(mColumns, i, j).normal = getNormalFor(i, j);
+            }
+        }
+    }
 
+    private void applyLogic(float deltaT) {
+        for (int j = 0; j < DIMENSION; j++) {
+            for (int i = 0; i < DIMENSION; i++) {
+                Column center = getColumn(mColumns, i, j);
+                Column left = getColumn(mColumns, i - 1, j);
+                Column right = getColumn(mColumns, i + 1, j);
+                Column top = getColumn(mColumns, i, j - 1);
+                Column bottom = getColumn(mColumns, i, j + 1);
+
+                double f = pow(SPEED, 2) * (left.height + right.height + top.height + bottom.height - 4 * center.height) / (pow(COLUMN_WIDTH, 2));
+
+                center.velocity += f * deltaT;
+                center.velocity *= SCALING_FACTOR;
+
+                Column newColumn = getColumn(mNewColumns, i, j);
+                newColumn.height = center.height + center.velocity * deltaT;
+            }
+        }
+
+        for (int j = 0; j < DIMENSION; j++) {
+            for (int i = 0; i < DIMENSION; i++) {
+                Column column = getColumn(mColumns, i, j);
+                Column newColumn = getColumn(mNewColumns, i, j);
+
+                column.height = newColumn.height;
+            }
+        }
     }
 
     public float[] getVertexArray() {
@@ -271,28 +250,39 @@ public class HeightField {
 
     public Mat4 getScaleMatrix() {
         return new Mat4(new Vec4(INITIAL_SCALE, 0, 0, 0),
-                        new Vec4(0, INITIAL_SCALE, 0, 0),
-                        new Vec4(0, 0, INITIAL_SCALE, 0),
-                        new Vec4(0, 0, 0, 1));
+                new Vec4(0, INITIAL_SCALE, 0, 0),
+                new Vec4(0, 0, INITIAL_SCALE, 0),
+                new Vec4(0, 0, 0, 1));
     }
 
     public void sprinkle() {
-        float increaser = 3;
+        float increaser = 5;
 
-        int v = (int)(Math.random() * DIMENSION);
-        int u = (int)(Math.random() * DIMENSION);
+        int v = (int) (Math.random() * DIMENSION);
+        int u = (int) (Math.random() * DIMENSION);
+
+        getColumn(mColumns, u, v).height += increaser;
+        getColumn(mColumns, u, v).velocity = increaser;
+
 
         getColumn(mColumns, u - 1, v - 1).height += increaser / 2;
+        getColumn(mColumns, u - 1, v - 1).velocity = increaser / 2;
         getColumn(mColumns, u, v - 1).height += increaser / 2;
-        getColumn(mColumns, u + 1, v - 1).height +=increaser / 2;
+        getColumn(mColumns, u, v - 1).velocity = increaser / 2;
+        getColumn(mColumns, u + 1, v - 1).height += increaser / 2;
+        getColumn(mColumns, u + 1, v - 1).velocity = increaser / 2;
 
         getColumn(mColumns, u - 1, v).height += increaser / 2;
-        getColumn(mColumns, u, v).height += increaser;
+        getColumn(mColumns, u - 1, v).velocity = increaser / 2;
         getColumn(mColumns, u + 1, v).height += increaser / 2;
+        getColumn(mColumns, u + 1, v).velocity = increaser / 2;
 
         getColumn(mColumns, u - 1, v + 1).height += increaser / 2;
+        getColumn(mColumns, u - 1, v + 1).velocity = increaser / 2;
         getColumn(mColumns, u, v + 1).height += increaser / 2;
+        getColumn(mColumns, u, v + 1).velocity = increaser / 2;
         getColumn(mColumns, u + 1, v + 1).height += increaser / 2;
+        getColumn(mColumns, u + 1, v + 1).velocity = increaser / 2;
     }
 
     public void addSphere(Sphere sphere) {

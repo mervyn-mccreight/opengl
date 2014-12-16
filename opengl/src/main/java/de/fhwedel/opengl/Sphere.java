@@ -119,10 +119,10 @@ public class Sphere {
         position = position.add(velocity.scale(deltaT));
         velocity = velocity.add(acceleration.scale(deltaT));
 
-        this.forces.clear();
+        forces.clear();
     }
 
     public void applyForce(Vec3 force) {
-        this.forces.add(force);
+        forces.add(force);
     }
 }
