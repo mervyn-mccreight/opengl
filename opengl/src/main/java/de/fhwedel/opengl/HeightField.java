@@ -91,12 +91,10 @@ public class HeightField {
             float minZ = spherePos.getZ() - radius;
             float maxZ = spherePos.getZ() + radius;
 
-            int minI = (int) ((minX - getPosition().getX()) / COLUMN_WIDTH);
-            int maxI = (int) ((maxX - getPosition().getX()) / COLUMN_WIDTH);
-            int minJ = (int) ((minZ - getPosition().getZ()) / COLUMN_WIDTH);
-            int maxJ = (int) ((maxZ - getPosition().getZ()) / COLUMN_WIDTH);
-
-            // TODO: iterate over columns form min to max i, j and push them down according to sphere Y at columns position
+            int minI = (int) ((minZ - getPosition().getZ()) / COLUMN_WIDTH);
+            int maxI = (int) ((maxZ - getPosition().getZ()) / COLUMN_WIDTH);
+            int minJ = (int) ((minX - getPosition().getX()) / COLUMN_WIDTH);
+            int maxJ = (int) ((maxX - getPosition().getX()) / COLUMN_WIDTH);
 
             float volume = 0;
             for (int i = minI; i < maxI; i++) {

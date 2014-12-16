@@ -19,7 +19,7 @@ import java.nio.IntBuffer;
 
 public class RenderLoop implements GLEventListener, KeyListener {
 
-    public static final Vec3 GRAVITY = new Vec3(0, 0, 0);
+    public static final Vec3 GRAVITY = new Vec3(0, -9.81f, 0);
     private final HeightField heightField;
     private final IntBuffer vertexBuffer = IntBuffer.allocate(1);
     private final IntBuffer normalBuffer = IntBuffer.allocate(1);
@@ -318,22 +318,22 @@ public class RenderLoop implements GLEventListener, KeyListener {
                 this.heightField.sprinkle();
                 break;
             case KeyEvent.VK_LEFT:
-                sphere.moveBy(new Vec3(-0.1f, 0, 0));
+                sphere.moveBy(new Vec3(-1f, 0, 0));
                 break;
             case KeyEvent.VK_RIGHT:
-                sphere.moveBy(new Vec3(0.1f, 0, 0));
+                sphere.moveBy(new Vec3(1f, 0, 0));
                 break;
             case KeyEvent.VK_UP:
-                sphere.moveBy(new Vec3(0, 0, -0.1f));
+                sphere.moveBy(new Vec3(0, 0, -1f));
                 break;
             case KeyEvent.VK_DOWN:
-                sphere.moveBy(new Vec3(0, 0, 0.1f));
+                sphere.moveBy(new Vec3(0, 0, 1f));
                 break;
             case KeyEvent.VK_PAGE_UP:
-                sphere.moveBy(new Vec3(0, 0.1f, 0));
+                sphere.moveBy(new Vec3(0, 1f, 0));
                 break;
             case KeyEvent.VK_PAGE_DOWN:
-                sphere.moveBy(new Vec3(0, -0.1f, 0));
+                sphere.moveBy(new Vec3(0, -1f, 0));
                 break;
             default:
                 break;
