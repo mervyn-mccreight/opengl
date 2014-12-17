@@ -132,12 +132,6 @@ public class HeightField {
                 }
             }
 
-            // for debug purpose
-            if (displacedVolume > 0) {
-                System.out.println("Sphere Volume: " + sphere.getVolume());
-                System.out.println("displaced Volume: " + displacedVolume);
-            }
-
             // archimedes principle: forceUp = displacedVolume * density * gravity
             // problem: how to determine displacedVolume?
             // currently: the weakener the resolution of the water grid is, the
@@ -145,7 +139,7 @@ public class HeightField {
 
             // another problem: the force when breaking the water surface is missing.
             // this is why the object is bouncing that much.
-            Vec3 force = new Vec3(0, -displacedVolume * WATER_DENSITY * world.getGravity().getY(), 0);
+            Vec3 force = new Vec3(0, displacedVolume * WATER_DENSITY * world.getGravity().scale(-1).getY(), 0);
             sphere.applyForce(force);
         }
     }
