@@ -106,6 +106,10 @@ public class HeightField {
             int minI = (int) ((minZ - getPosition().getZ()) / COLUMN_WIDTH);
             int maxI = (int) ((maxZ - getPosition().getZ()) / COLUMN_WIDTH);
 
+
+            // try hybrid implementation.
+            // if sphere(x,z) needs water above itself, this implementation is correct.
+            // otherwise old logic, where sphere "pushes" the water down is applied.
             float displacedVolume = 0f;
 
             for (int i = minI; i < maxI; i++) {
