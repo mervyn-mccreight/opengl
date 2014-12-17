@@ -6,6 +6,7 @@ import com.hackoeur.jglm.Vec3;
 import com.hackoeur.jglm.Vec4;
 import com.jogamp.opengl.math.VectorUtil;
 
+import java.util.Collection;
 import java.util.List;
 
 import static java.lang.Math.pow;
@@ -67,6 +68,27 @@ public class HeightField {
         applyLogic(deltaT);
         calculateNormals();
         applySphereInteraction();
+        clearSphereInteractionForNonSphereColumns();
+    }
+
+    private void clearSphereInteractionForNonSphereColumns() {
+        for (int i = 0; i < DIMENSION; i++) {
+            for (int j = 0; j < DIMENSION; j++) {
+                float x = j*COLUMN_WIDTH + getPosition().getX();
+                float z = i*COLUMN_WIDTH + getPosition().getZ();
+
+                boolean flag = false;
+
+                for (Sphere sphere : spheres) {
+                     flag = flag || (sphere.isBelow(x, getColumn(mColumns, i, j).height + getPosition().getY(), z));
+                }
+
+                if (!flag) {
+                    getColumn(mColumns, i, j).replaced = 0;
+                    getColumn(mColumns, i, j).replacedDelta = 0;
+                }
+            }
+        }
     }
 
     private void applySphereInteraction() {
@@ -106,13 +128,6 @@ public class HeightField {
                             column.replacedDelta = replacedHeight - column.replaced;
                             column.replaced = replacedHeight;
                         }
-                    } else {
-                        // this is only one part of the truth.
-                        // in all correctness you would have to step over every column
-                        // of the height-field and look if any sphere is actually in the water at this discrete point.
-                        // if not, do below.
-                        column.replaced = 0;
-                        column.replacedDelta = 0;
                     }
                 }
             }
@@ -314,7 +329,7 @@ public class HeightField {
         getColumn(mColumns, u + 1, v + 1).velocity = increaser / 2;
     }
 
-    public void addSphere(Sphere sphere) {
-        spheres.add(sphere);
+    public void addSphere(Collection<Sphere> toAdd) {
+        spheres.addAll(toAdd);
     }
 }

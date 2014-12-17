@@ -1,5 +1,6 @@
 package de.fhwedel.opengl;
 
+import com.google.common.collect.Lists;
 import com.hackoeur.jglm.Mat4;
 import com.hackoeur.jglm.Matrices;
 import com.hackoeur.jglm.Vec3;
@@ -16,6 +17,7 @@ import javax.media.opengl.GLEventListener;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.List;
 
 
 public class RenderLoop implements GLEventListener, KeyListener {
@@ -25,7 +27,7 @@ public class RenderLoop implements GLEventListener, KeyListener {
     private final HeightField heightField;
     private final IntBuffer vertexBuffer = IntBuffer.allocate(1);
     private final IntBuffer normalBuffer = IntBuffer.allocate(1);
-    private final Sphere sphere;
+    private final List<Sphere> spheres = Lists.newArrayList();
     private final World world;
     private final FPSAnimator animator;
     private long lastTime;
@@ -37,8 +39,11 @@ public class RenderLoop implements GLEventListener, KeyListener {
         this.animator = animator;
         world = new World();
         heightField = new HeightField(world);
-        sphere = new Sphere(new Vec3(0, 10f, 0), 5f);
-        heightField.addSphere(sphere);
+        spheres.add(new Sphere(new Vec3(0, 10f, 0), 5f));
+        spheres.add(new Sphere(new Vec3(5, 6, 12), 3));
+        spheres.add(new Sphere(new Vec3(-13, 4, 20), 2));
+        spheres.add(new Sphere(new Vec3(-5, 6, -12), 3));
+        heightField.addSphere(spheres);
     }
 
     @Override
@@ -159,53 +164,55 @@ public class RenderLoop implements GLEventListener, KeyListener {
         GL2 gl2 = drawable.getGL().getGL2();
 
         renderHeightField(gl2);
-        renderSphere(gl2);
+        renderSpheres(gl2);
     }
 
-    private void renderSphere(GL2 gl2) {
-        Mat4 model = Mat4.MAT4_IDENTITY;
-        model = model.multiply(sphere.getScaleMatrix(SCENE_SCALE));
-        model = model.translate(sphere.getPosition());
-        int modelId = gl2.glGetUniformLocation(programId, "M");
-        gl2.glUniformMatrix4fv(modelId, 1, false, model.getBuffer());
+    private void renderSpheres(GL2 gl2) {
+        for (Sphere sphere : spheres) {
+            Mat4 model = Mat4.MAT4_IDENTITY;
+            model = model.multiply(sphere.getScaleMatrix(SCENE_SCALE));
+            model = model.translate(sphere.getPosition());
+            int modelId = gl2.glGetUniformLocation(programId, "M");
+            gl2.glUniformMatrix4fv(modelId, 1, false, model.getBuffer());
 
-        float[] vertexArray = sphere.getVertexArray();
+            float[] vertexArray = sphere.getVertexArray();
 
-        int vertexBufferId = vertexBuffer.get(0);
-        gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, vertexBufferId);
-        gl2.glBufferData(GL2.GL_ARRAY_BUFFER, vertexArray.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(vertexArray), GL2.GL_DYNAMIC_DRAW);
+            int vertexBufferId = vertexBuffer.get(0);
+            gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, vertexBufferId);
+            gl2.glBufferData(GL2.GL_ARRAY_BUFFER, vertexArray.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(vertexArray), GL2.GL_DYNAMIC_DRAW);
 
-        float[] normalArray = sphere.getNormals();
+            float[] normalArray = sphere.getNormals();
 
-        int normalBufferId = normalBuffer.get();
-        gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, normalBufferId);
-        gl2.glBufferData(GL2.GL_ARRAY_BUFFER, normalArray.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(normalArray), GL2.GL_DYNAMIC_DRAW);
+            int normalBufferId = normalBuffer.get();
+            gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, normalBufferId);
+            gl2.glBufferData(GL2.GL_ARRAY_BUFFER, normalArray.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(normalArray), GL2.GL_DYNAMIC_DRAW);
 
-        //render objects here.
-        gl2.glEnableVertexAttribArray(0);
-        gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, vertexBufferId);
-        gl2.glVertexAttribPointer(0,    // index of attribute (vertex, color...)
-                3,    // number of vertices
-                GL2.GL_FLOAT,  // type
-                false, // normalized?
-                0,    // stride (Schrittweite)
-                0);   // offset
+            //render objects here.
+            gl2.glEnableVertexAttribArray(0);
+            gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, vertexBufferId);
+            gl2.glVertexAttribPointer(0,    // index of attribute (vertex, color...)
+                    3,    // number of vertices
+                    GL2.GL_FLOAT,  // type
+                    false, // normalized?
+                    0,    // stride (Schrittweite)
+                    0);   // offset
 
-        gl2.glEnableVertexAttribArray(2);
-        gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, normalBufferId);
-        gl2.glVertexAttribPointer(2,
-                3,
-                GL2.GL_FLOAT,
-                false,
-                0,
-                0);
+            gl2.glEnableVertexAttribArray(2);
+            gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, normalBufferId);
+            gl2.glVertexAttribPointer(2,
+                    3,
+                    GL2.GL_FLOAT,
+                    false,
+                    0,
+                    0);
 
-        gl2.glDrawArrays(GL2.GL_POINTS, 0, vertexArray.length / 3); // starting from 0, 12*3 vertices total
-        gl2.glDisableVertexAttribArray(0);
-        gl2.glDisableVertexAttribArray(2);
+            gl2.glDrawArrays(GL2.GL_POINTS, 0, vertexArray.length / 3); // starting from 0, 12*3 vertices total
+            gl2.glDisableVertexAttribArray(0);
+            gl2.glDisableVertexAttribArray(2);
 
-        vertexBuffer.clear();
-        normalBuffer.clear();
+            vertexBuffer.clear();
+            normalBuffer.clear();
+        }
     }
 
     private void renderHeightField(GL2 gl2) {
@@ -259,10 +266,16 @@ public class RenderLoop implements GLEventListener, KeyListener {
     }
 
     private void update(GLAutoDrawable drawable, float deltaT) {
-        sphere.applyForce(world.getGravity().scale(sphere.getMass()));
+
+        for (Sphere sphere : spheres) {
+            sphere.applyForce(world.getGravity().scale(sphere.getMass()));
+        }
 
         heightField.update(deltaT);
-        sphere.update(deltaT);
+
+        for (Sphere sphere : spheres) {
+            sphere.update(deltaT);
+        }
 
         GL2 gl2 = drawable.getGL().getGL2();
 
@@ -324,22 +337,22 @@ public class RenderLoop implements GLEventListener, KeyListener {
                 this.heightField.sprinkle();
                 break;
             case KeyEvent.VK_LEFT:
-                sphere.moveBy(new Vec3(-1f, 0, 0));
+                spheres.get(0).moveBy(new Vec3(-1f, 0, 0));
                 break;
             case KeyEvent.VK_RIGHT:
-                sphere.moveBy(new Vec3(1f, 0, 0));
+                spheres.get(0).moveBy(new Vec3(1f, 0, 0));
                 break;
             case KeyEvent.VK_UP:
-                sphere.moveBy(new Vec3(0, 0, -1f));
+                spheres.get(0).moveBy(new Vec3(0, 0, -1f));
                 break;
             case KeyEvent.VK_DOWN:
-                sphere.moveBy(new Vec3(0, 0, 1f));
+                spheres.get(0).moveBy(new Vec3(0, 0, 1f));
                 break;
             case KeyEvent.VK_PAGE_UP:
-                sphere.moveBy(new Vec3(0, 1f, 0));
+                spheres.get(0).moveBy(new Vec3(0, 1f, 0));
                 break;
             case KeyEvent.VK_PAGE_DOWN:
-                sphere.moveBy(new Vec3(0, -1f, 0));
+                spheres.get(0).moveBy(new Vec3(0, -1f, 0));
                 break;
             case KeyEvent.VK_G:
                 world.toggleGravity();
