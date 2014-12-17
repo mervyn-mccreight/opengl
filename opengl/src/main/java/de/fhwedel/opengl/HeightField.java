@@ -14,10 +14,10 @@ import static java.lang.Math.pow;
 public class HeightField {
     public static final int DIMENSION = 100;
     public static final float COLUMN_HEIGHT = DIMENSION;
-    public static final float COLUMN_WIDTH = 1f; // in meters.
+    public static final float COLUMN_WIDTH = 0.8f; // in meters.
     private static final Vec3 INITIAL_POSITION = new Vec3(-COLUMN_WIDTH * DIMENSION / 2, -COLUMN_HEIGHT, -COLUMN_WIDTH * DIMENSION / 2);
     private static final float SPEED = 5f; // <measure-unit of width> per second, since delta-time is given in seconds.
-    private static final float SCALING_FACTOR = 0.995f;
+    private static final float SCALING_FACTOR = 0.98f;
     private static final float WATER_DENSITY = 999.97f; // in kg/m^3
     private final List<Integer> indices;
     private final World world;
@@ -145,7 +145,7 @@ public class HeightField {
 
             // another problem: the force when breaking the water surface is missing.
             // this is why the object is bouncing that much.
-            Vec3 force = new Vec3(0, -displacedVolume * COLUMN_WIDTH * COLUMN_WIDTH * WATER_DENSITY * world.getGravity().getY(), 0);
+            Vec3 force = new Vec3(0, -displacedVolume * WATER_DENSITY * world.getGravity().getY(), 0);
             sphere.applyForce(force);
         }
     }
