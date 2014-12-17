@@ -123,13 +123,14 @@ public class HeightField {
                 }
             }
 
+            // for debug purpose
             if (displacedVolume > 0) {
                 System.out.println("Sphere Volume: " + sphere.getVolume());
                 System.out.println("displaced Volume: " + displacedVolume);
             }
 
-            // problem: how to determine displacedVolume?
             // archimedes principle: forceUp = displacedVolume * density * gravity
+            // problem: how to determine displacedVolume?
             Vec3 force = new Vec3(0, -displacedVolume * COLUMN_WIDTH * COLUMN_WIDTH * WATER_DENSITY * world.getGravity().getY() * 0.001f, 0);
 
             sphere.applyForce(force);
