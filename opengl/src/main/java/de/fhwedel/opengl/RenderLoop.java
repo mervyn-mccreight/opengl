@@ -7,6 +7,7 @@ import com.hackoeur.jglm.Vec4;
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.newt.event.KeyEvent;
 import com.jogamp.newt.event.KeyListener;
+import com.jogamp.opengl.util.FPSAnimator;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
@@ -25,12 +26,14 @@ public class RenderLoop implements GLEventListener, KeyListener {
     private final IntBuffer normalBuffer = IntBuffer.allocate(1);
     private final Sphere sphere;
     private final World world;
+    private final FPSAnimator animator;
     private long lastTime;
     private int programId;
     private Mat4 view;
     private Mat4 projection;
 
-    public RenderLoop() {
+    public RenderLoop(FPSAnimator animator) {
+        this.animator = animator;
         world = new World();
         heightField = new HeightField(world);
         sphere = new Sphere(new Vec3(0, 10, 0), 2);
@@ -340,6 +343,9 @@ public class RenderLoop implements GLEventListener, KeyListener {
             case KeyEvent.VK_G:
                 world.toggleGravity();
                 break;
+            case KeyEvent.VK_ESCAPE:
+                exit();
+                break;
             default:
                 break;
         }
@@ -348,5 +354,20 @@ public class RenderLoop implements GLEventListener, KeyListener {
     @Override
     public void keyReleased(KeyEvent e) {
 
+    }
+
+    private void exit() {
+        // Use a dedicate thread to run the stop() to ensure that the
+        // animator stops before program exits.
+        new Thread() {
+            @Override
+            public void run() {
+                if (animator.isStarted()) {
+                    animator.stop();
+                }
+
+                System.exit(0);
+            }
+        }.start();
     }
 }

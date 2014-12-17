@@ -46,7 +46,7 @@ public class Window {
             }
         });
 
-        RenderLoop loop = new RenderLoop();
+        RenderLoop loop = new RenderLoop(animator);
         window.addGLEventListener(loop);
         window.addKeyListener(loop);
 

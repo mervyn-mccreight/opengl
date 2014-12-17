@@ -27,10 +27,15 @@ public class Sphere {
     public Sphere(Vec3 position, float radius) {
         this.radius = radius;
         this.position = position;
-        mass = (float) ((4 / 3 * Math.PI) * Math.pow(radius, 3)) * DENSITY;
+        mass = getVolume() * DENSITY;
 
         vertexArray = new float[RINGS * SECTORS * 3];
         normalArray = new float[RINGS * SECTORS * 3];
+    }
+
+    public float getVolume() {
+        float diameter = radius * 2;
+        return (float) (Math.PI * (Math.pow(diameter, 3) / 6f)); // pi * d^3/6
     }
 
     public boolean contains(float x, float y, float z) {
