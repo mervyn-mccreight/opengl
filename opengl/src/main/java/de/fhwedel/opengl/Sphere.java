@@ -12,7 +12,6 @@ public class Sphere {
     private static final float R = 1f/(RINGS-1);
     private static final int SECTORS = 100;
     private static final float S = 1f/(SECTORS-1);
-    private static final float INITIAL_SCALE = 0.3f;
     private static final float DENSITY = 400f; // in kg/m^3
 
     private final float[] vertexArray;
@@ -111,10 +110,10 @@ public class Sphere {
         return normalArray;
     }
 
-    public Mat4 getScaleMatrix() {
-        return new Mat4(new Vec4(INITIAL_SCALE, 0, 0, 0),
-                new Vec4(0, INITIAL_SCALE, 0, 0),
-                new Vec4(0, 0, INITIAL_SCALE, 0),
+    public Mat4 getScaleMatrix(float scaleFactor) {
+        return new Mat4(new Vec4(scaleFactor, 0, 0, 0),
+                new Vec4(0, scaleFactor, 0, 0),
+                new Vec4(0, 0, scaleFactor, 0),
                 new Vec4(0, 0, 0, 1));
     }
 

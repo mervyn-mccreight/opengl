@@ -21,6 +21,7 @@ import java.nio.IntBuffer;
 public class RenderLoop implements GLEventListener, KeyListener {
 
 
+    public static final float SCENE_SCALE = 0.3f;
     private final HeightField heightField;
     private final IntBuffer vertexBuffer = IntBuffer.allocate(1);
     private final IntBuffer normalBuffer = IntBuffer.allocate(1);
@@ -36,7 +37,7 @@ public class RenderLoop implements GLEventListener, KeyListener {
         this.animator = animator;
         world = new World();
         heightField = new HeightField(world);
-        sphere = new Sphere(new Vec3(0, 5f, 0), 3f);
+        sphere = new Sphere(new Vec3(0, 10f, 0), 5f);
         heightField.addSphere(sphere);
     }
 
@@ -163,7 +164,7 @@ public class RenderLoop implements GLEventListener, KeyListener {
 
     private void renderSphere(GL2 gl2) {
         Mat4 model = Mat4.MAT4_IDENTITY;
-        model = model.multiply(sphere.getScaleMatrix());
+        model = model.multiply(sphere.getScaleMatrix(SCENE_SCALE));
         model = model.translate(sphere.getPosition());
         int modelId = gl2.glGetUniformLocation(programId, "M");
         gl2.glUniformMatrix4fv(modelId, 1, false, model.getBuffer());
@@ -209,7 +210,7 @@ public class RenderLoop implements GLEventListener, KeyListener {
 
     private void renderHeightField(GL2 gl2) {
         Mat4 model = Mat4.MAT4_IDENTITY;
-        model = model.multiply(heightField.getScaleMatrix());
+        model = model.multiply(heightField.getScaleMatrix(SCENE_SCALE));
         model = model.translate(heightField.getPosition());
         int modelId = gl2.glGetUniformLocation(programId, "M");
         gl2.glUniformMatrix4fv(modelId, 1, false, model.getBuffer());

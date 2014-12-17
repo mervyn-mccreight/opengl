@@ -13,12 +13,10 @@ import static java.lang.Math.pow;
 public class HeightField {
     public static final int DIMENSION = 100;
     public static final float COLUMN_HEIGHT = DIMENSION;
-    public static final float COLUMN_WIDTH = 1f; // what unit?
+    public static final float COLUMN_WIDTH = 1f; // in meters.
     private static final Vec3 INITIAL_POSITION = new Vec3(-COLUMN_WIDTH * DIMENSION / 2, -COLUMN_HEIGHT, -COLUMN_WIDTH * DIMENSION / 2);
-    // what is realistic? depends on the unit of the width. i've set it down, presuming a large unit (so the field is showing a large water-surface).
-    private static final float SPEED = COLUMN_WIDTH * 2.5f;
+    private static final float SPEED = 5f; // <measure-unit of width> per second, since delta-time is given in seconds.
     private static final float SCALING_FACTOR = 0.98f;
-    private static final float INITIAL_SCALE = 0.3f;
     private static final float WATER_DENSITY = 999.97f; // in kg/m^3
     private final List<Integer> indices;
     private final World world;
@@ -96,21 +94,23 @@ public class HeightField {
                     float z = (i * COLUMN_WIDTH) + getPosition().getZ();
 
                     if (sphere.isBelow(x, y, z)) {
-                        float sphereDepthInWater = y - sphere.getBottomHalfY(x, z);
-
                         // this part of sphere is completely covered with water.
                         if (sphere.getTopHalfY(x, z) <= y) {
-                            float newReplaced = sphere.getTopHalfY(x, z) - sphere.getBottomHalfY(x, z);
-                            displacedVolume += newReplaced * COLUMN_WIDTH * COLUMN_WIDTH;
-                            column.replacedDelta = newReplaced - column.replaced;
-                            column.replaced = newReplaced;
+                            float replacedHeight = sphere.getTopHalfY(x, z) - sphere.getBottomHalfY(x, z);
+                            displacedVolume += replacedHeight * COLUMN_WIDTH * COLUMN_WIDTH; // *width*height to get volume
+                            column.replacedDelta = replacedHeight - column.replaced;
+                            column.replaced = replacedHeight;
                         } else { // this part of sphere is only dipped in water.
-                            float newReplaced = sphereDepthInWater;
-                            displacedVolume += newReplaced * COLUMN_WIDTH * COLUMN_WIDTH;
-                            column.replacedDelta = newReplaced - column.replaced;
-                            column.replaced = newReplaced;
+                            float replacedHeight = y - sphere.getBottomHalfY(x, z);
+                            displacedVolume += replacedHeight * COLUMN_WIDTH * COLUMN_WIDTH; // *width*height to get volume
+                            column.replacedDelta = replacedHeight - column.replaced;
+                            column.replaced = replacedHeight;
                         }
                     } else {
+                        // this is only one part of the truth.
+                        // in all correctness you would have to step over every column
+                        // of the height-field and look if any sphere is actually in the water at this discrete point.
+                        // if not, do below.
                         column.replaced = 0;
                         column.replacedDelta = 0;
                     }
@@ -277,10 +277,10 @@ public class HeightField {
         return INITIAL_POSITION;
     }
 
-    public Mat4 getScaleMatrix() {
-        return new Mat4(new Vec4(INITIAL_SCALE, 0, 0, 0),
-                new Vec4(0, INITIAL_SCALE, 0, 0),
-                new Vec4(0, 0, INITIAL_SCALE, 0),
+    public Mat4 getScaleMatrix(float scaleFactor) {
+        return new Mat4(new Vec4(scaleFactor, 0, 0, 0),
+                new Vec4(0, scaleFactor, 0, 0),
+                new Vec4(0, 0, scaleFactor, 0),
                 new Vec4(0, 0, 0, 1));
     }
 
