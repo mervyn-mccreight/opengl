@@ -178,7 +178,7 @@ public class HeightField {
                 center.velocity *= SCALING_FACTOR;
 
                 Column newColumn = getColumn(mNewColumns, i, j);
-                newColumn.height = center.height + center.velocity * deltaT * (1/SCALING_FACTOR) ;
+                newColumn.height = center.height + center.velocity * deltaT;
             }
         }
 
