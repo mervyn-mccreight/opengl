@@ -13,14 +13,13 @@ import static java.lang.Math.pow;
 public class HeightField {
     public static final int DIMENSION = 100;
     public static final float COLUMN_HEIGHT = DIMENSION;
-    public static final float COLUMN_WIDTH = 1f;
+    public static final float COLUMN_WIDTH = 1f; // what unit?
     private static final Vec3 INITIAL_POSITION = new Vec3(-COLUMN_WIDTH * DIMENSION / 2, -COLUMN_HEIGHT, -COLUMN_WIDTH * DIMENSION / 2);
-    private static final float SPEED = COLUMN_WIDTH * 20;
-    public static final int COLUMN_VELOCITY = 0;
-    public static final float MAX_SLOPE = 0.3f;
+    // what is realistic? depends on the unit of the width. i've set it down, presuming a large unit (so the field is showing a large water-surface).
+    private static final float SPEED = COLUMN_WIDTH * 2.5f;
     private static final float SCALING_FACTOR = 0.98f;
     private static final float INITIAL_SCALE = 0.3f;
-    private static final float WATER_DENSITY = 1f;
+    private static final float WATER_DENSITY = 999.97f; // in kg/m^3
     private final List<Integer> indices;
     private final World world;
 
@@ -48,10 +47,11 @@ public class HeightField {
 
         for (int j = 0; j < DIMENSION; j++) {
             for (int i = 0; i < DIMENSION; i++) {
-                float y = (float) Math.random() * 0.00f;
+                int initialVelocity = 0;
+                float initialHeight = COLUMN_HEIGHT;
 
-                mColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY, 0f, 0f, new float[3]);
-                mNewColumns[i][j] = new Column(COLUMN_HEIGHT + y, COLUMN_VELOCITY, 0f, 0f, new float[3]);
+                mColumns[i][j] = new Column(initialHeight, initialVelocity, 0f, 0f, new float[3]);
+                mNewColumns[i][j] = new Column(initialHeight, initialVelocity, 0f, 0f, new float[3]);
             }
         }
     }
@@ -66,15 +66,9 @@ public class HeightField {
     }
 
     public void update(float deltaT) {
-//        System.out.println("===============================");
-//        System.out.println("Volume before: " + calcVolume());
-
         applyLogic(deltaT);
         calculateNormals();
         applySphereInteraction();
-
-//        System.out.println("Volume after: " + calcVolume());
-//        System.out.println("===============================");
     }
 
     private void applySphereInteraction() {
@@ -107,12 +101,12 @@ public class HeightField {
                         // this part of sphere is completely covered with water.
                         if (sphere.getTopHalfY(x, z) <= y) {
                             float newReplaced = sphere.getTopHalfY(x, z) - sphere.getBottomHalfY(x, z);
-                            displacedVolume += newReplaced;
+                            displacedVolume += newReplaced * COLUMN_WIDTH * COLUMN_WIDTH;
                             column.replacedDelta = newReplaced - column.replaced;
                             column.replaced = newReplaced;
                         } else { // this part of sphere is only dipped in water.
                             float newReplaced = sphereDepthInWater;
-                            displacedVolume += newReplaced;
+                            displacedVolume += newReplaced * COLUMN_WIDTH * COLUMN_WIDTH;
                             column.replacedDelta = newReplaced - column.replaced;
                             column.replaced = newReplaced;
                         }
@@ -131,8 +125,12 @@ public class HeightField {
 
             // archimedes principle: forceUp = displacedVolume * density * gravity
             // problem: how to determine displacedVolume?
-            Vec3 force = new Vec3(0, -displacedVolume * COLUMN_WIDTH * COLUMN_WIDTH * WATER_DENSITY * world.getGravity().getY() * 0.001f, 0);
+            // currently: the weakener the resolution of the water grid is, the
+            // less accurate is the displaced volume calculation.
 
+            // another problem: the force when breaking the water surface is missing.
+            // this is why the object is bouncing that much.
+            Vec3 force = new Vec3(0, -displacedVolume * COLUMN_WIDTH * COLUMN_WIDTH * WATER_DENSITY * world.getGravity().getY(), 0);
             sphere.applyForce(force);
         }
     }
