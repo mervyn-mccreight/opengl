@@ -22,10 +22,12 @@ public class Sphere {
     private Vec3 position;
     private Vec3 velocity = Vec3.VEC3_ZERO;
     private List<Vec3> forces = Lists.newArrayList();
+    private float mass;
 
     public Sphere(Vec3 position, float radius) {
         this.radius = radius;
         this.position = position;
+        mass = (float) ((4 / 3 * Math.PI) * Math.pow(radius, 3)) * DENSITY;
 
         vertexArray = new float[RINGS * SECTORS * 3];
         normalArray = new float[RINGS * SECTORS * 3];
@@ -117,10 +119,9 @@ public class Sphere {
         for (Vec3 vec3 : forces) {
             force = force.add(vec3);
         }
+        //System.out.println("Sphere force: " + force);
 
-        float mass = (float) ((4 / 3 * Math.PI) * Math.pow(radius, 3)) * DENSITY;
-
-        Vec3 acceleration = force.scale(1f/mass);
+        Vec3 acceleration = force.scale(1f/ mass);
 
         position = position.add(velocity.scale(deltaT));
         velocity = velocity.add(acceleration.scale(deltaT));
@@ -130,5 +131,9 @@ public class Sphere {
 
     public void applyForce(Vec3 force) {
         forces.add(force);
+    }
+
+    public float getMass() {
+        return mass;
     }
 }

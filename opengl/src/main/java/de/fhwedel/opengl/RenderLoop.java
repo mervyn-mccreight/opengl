@@ -255,7 +255,7 @@ public class RenderLoop implements GLEventListener, KeyListener {
     }
 
     private void update(GLAutoDrawable drawable, float deltaT) {
-        sphere.applyForce(world.getGravity());
+        sphere.applyForce(world.getGravity().scale(sphere.getMass()));
 
         heightField.update(deltaT);
         sphere.update(deltaT);
