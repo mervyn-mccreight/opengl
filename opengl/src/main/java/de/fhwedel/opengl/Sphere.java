@@ -42,7 +42,7 @@ public class Sphere {
         return vec.getLength() <= radius;
     }
 
-    public boolean isBelow(float x, float y, float z) {
+    public boolean touches(float x, float y, float z) {
         Float sphereY = getBottomHalfY(x, z);
         if (sphereY.equals(Float.NaN)) {
             return false;
@@ -139,5 +139,13 @@ public class Sphere {
 
     public float getMass() {
         return mass;
+    }
+
+    public boolean isMovingUp() {
+        return velocity.getY() > 0;
+    }
+
+    public void scaleVelocity(float factor) {
+        velocity = velocity.scale(factor);
     }
 }

@@ -80,7 +80,7 @@ public class HeightField {
                 boolean flag = false;
 
                 for (Sphere sphere : spheres) {
-                     flag = flag || (sphere.isBelow(x, getColumn(mColumns, i, j).height + getPosition().getY(), z));
+                     flag = flag || (sphere.touches(x, getColumn(mColumns, i, j).height + getPosition().getY(), z));
                 }
 
                 if (!flag) {
@@ -119,7 +119,11 @@ public class HeightField {
                     float y = column.height + getPosition().getY();
                     float z = (i * COLUMN_WIDTH) + getPosition().getZ();
 
-                    if (sphere.isBelow(x, y, z)) {
+                    if (sphere.touches(x, y, z)) {
+                        if (!sphere.isMovingUp()) {
+                            sphere.scaleVelocity(0.9999f);
+                        }
+
                         // this part of sphere is completely covered with water.
                         if (sphere.getTopHalfY(x, z) <= y) {
                             float replacedHeight = sphere.getTopHalfY(x, z) - sphere.getBottomHalfY(x, z);
@@ -170,6 +174,21 @@ public class HeightField {
     private void applyLogic(float deltaT) {
         for (int j = 0; j < DIMENSION; j++) {
             for (int i = 0; i < DIMENSION; i++) {
+                Column column = getColumn(mColumns, i, j);
+                Column left = getColumn(mColumns, i - 1, j);
+                Column right = getColumn(mColumns, i + 1, j);
+                Column top = getColumn(mColumns, i, j - 1);
+                Column bottom = getColumn(mColumns, i, j + 1);
+
+                left.height += column.replacedDelta / 6;
+                right.height += column.replacedDelta / 6;
+                top.height += column.replacedDelta / 6;
+                bottom.height += column.replacedDelta / 6;
+            }
+        }
+
+        for (int j = 0; j < DIMENSION; j++) {
+            for (int i = 0; i < DIMENSION; i++) {
                 Column center = getColumn(mColumns, i, j);
                 Column left = getColumn(mColumns, i - 1, j);
                 Column right = getColumn(mColumns, i + 1, j);
@@ -183,21 +202,6 @@ public class HeightField {
 
                 Column newColumn = getColumn(mNewColumns, i, j);
                 newColumn.height = center.height + center.velocity * deltaT;
-            }
-        }
-
-        for (int j = 0; j < DIMENSION; j++) {
-            for (int i = 0; i < DIMENSION; i++) {
-                Column column = getColumn(mColumns, i, j);
-                Column left = getColumn(mNewColumns, i - 1, j);
-                Column right = getColumn(mNewColumns, i + 1, j);
-                Column top = getColumn(mNewColumns, i, j - 1);
-                Column bottom = getColumn(mNewColumns, i, j + 1);
-
-                left.height += column.replacedDelta / 4;
-                right.height += column.replacedDelta / 4;
-                top.height += column.replacedDelta / 4;
-                bottom.height += column.replacedDelta / 4;
             }
         }
 
@@ -298,8 +302,7 @@ public class HeightField {
     }
 
     public void sprinkle() {
-        float increaser = 5;
-
+        float increaser = 0.5f;
         int v = (int) (Math.random() * DIMENSION);
         int u = (int) (Math.random() * DIMENSION);
 
