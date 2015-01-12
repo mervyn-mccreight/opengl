@@ -13,6 +13,7 @@ out vec3 color;
 uniform vec3 LightColor;
 uniform float LightPower;
 
+uniform vec3 MaterialColor;
 uniform vec3 MaterialAmbientComponent;
 uniform vec4 MaterialSpecularComponent;
 
@@ -24,10 +25,8 @@ void main(){
     float cosAlpha = clamp(dot(E, R), 0.0, 1.0);
     float cosTheta = clamp(dot(n, l), 0.0, 1.0);
 
-    vec3 constantColor = vec3(0.3, 0.4, 0.8);
-
-    vec3 MaterialDiffuseColor = constantColor * LightColor * LightPower * cosTheta / (distance*distance);
-    vec3 MaterialAmbientColor = MaterialAmbientComponent * constantColor;
+    vec3 MaterialDiffuseColor = MaterialColor * LightColor * LightPower * cosTheta / (distance*distance);
+    vec3 MaterialAmbientColor = MaterialAmbientComponent * MaterialColor;
     vec3 MaterialSpecularColor = MaterialSpecularComponent.xyz * LightPower * pow(cosAlpha, MaterialSpecularComponent.w) / (distance*distance);
     color = MaterialAmbientColor + MaterialDiffuseColor + MaterialSpecularColor;
 }

@@ -8,9 +8,9 @@ import com.hackoeur.jglm.Vec4;
 import java.util.List;
 
 public class Sphere {
-    private static final int RINGS = 50;
+    private static final int RINGS = 100;
     private static final float R = 1f/(RINGS-1);
-    private static final int SECTORS = 50;
+    private static final int SECTORS = 100;
     private static final float S = 1f/(SECTORS-1);
     private static final float DENSITY = 400f; // in kg/m^3
 

@@ -17,7 +17,7 @@ public class HeightField {
     public static final float COLUMN_WIDTH = 0.8f; // in meters.
     private static final Vec3 INITIAL_POSITION = new Vec3(-COLUMN_WIDTH * DIMENSION / 2, -COLUMN_HEIGHT, -COLUMN_WIDTH * DIMENSION / 2);
     private static final float SPEED = 5f; // <measure-unit of width> per second, since delta-time is given in seconds.
-    private static final float SCALING_FACTOR = 0.98f;
+    private static final float SCALING_FACTOR = 0.99f;
     private static final float WATER_DENSITY = 999.97f; // in kg/m^3
     private final List<Integer> indices;
     private final World world;

@@ -39,10 +39,8 @@ public class RenderLoop implements GLEventListener, KeyListener {
         this.animator = animator;
         world = new World();
         heightField = new HeightField(world);
-        spheres.add(new Sphere(new Vec3(0, 10f, 0), 5f));
+        spheres.add(new Sphere(new Vec3(0, 6f, 0), 3f));
         spheres.add(new Sphere(new Vec3(5, 6, 12), 3));
-        spheres.add(new Sphere(new Vec3(-13, 4, 20), 2));
-        spheres.add(new Sphere(new Vec3(-5, 6, -12), 3));
         heightField.addSphere(spheres);
     }
 
@@ -175,6 +173,9 @@ public class RenderLoop implements GLEventListener, KeyListener {
             int modelId = gl2.glGetUniformLocation(programId, "M");
             gl2.glUniformMatrix4fv(modelId, 1, false, model.getBuffer());
 
+            int materialColor = gl2.glGetUniformLocation(programId, "MaterialColor");
+            gl2.glUniform3fv(materialColor, 1, new Vec3(0.8f, 0.2f, 0.2f).getBuffer());
+
             float[] vertexArray = sphere.getVertexArray();
 
             int vertexBufferId = vertexBuffer.get(0);
@@ -221,6 +222,9 @@ public class RenderLoop implements GLEventListener, KeyListener {
         model = model.translate(heightField.getPosition());
         int modelId = gl2.glGetUniformLocation(programId, "M");
         gl2.glUniformMatrix4fv(modelId, 1, false, model.getBuffer());
+
+        int materialColor = gl2.glGetUniformLocation(programId, "MaterialColor");
+        gl2.glUniform3fv(materialColor, 1, new Vec3(0.3f, 0.4f, 0.8f).getBuffer());
 
         float[] vertexArray = heightField.getVertexArray();
 
