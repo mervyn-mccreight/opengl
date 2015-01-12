@@ -8,13 +8,13 @@ import com.hackoeur.jglm.Vec4;
 import java.util.List;
 
 public class Sphere {
-    private static final int RINGS = 100;
+    private static final int RINGS = 20;
     private static final float R = 1f/(RINGS-1);
-    private static final int SECTORS = 100;
+    private static final int SECTORS = 20;
     private static final float S = 1f/(SECTORS-1);
     private static final float DENSITY = 400f; // in kg/m^3
 
-    private final float[] vertexArray;
+    private final float[] vertices;
     private final float[] normalArray;
 
     private float radius;
@@ -22,14 +22,22 @@ public class Sphere {
     private Vec3 velocity = Vec3.VEC3_ZERO;
     private List<Vec3> forces = Lists.newArrayList();
     private float mass;
+    private int[] indices;
+    private float[] vertexArray;
 
     public Sphere(Vec3 position, float radius) {
         this.radius = radius;
         this.position = position;
         mass = getVolume() * DENSITY;
 
-        vertexArray = new float[RINGS * SECTORS * 3];
+        vertices = new float[RINGS * SECTORS * 3];
         normalArray = new float[RINGS * SECTORS * 3];
+        indices = new int[RINGS * SECTORS * 4];
+        vertexArray = new float[indices.length * 3];
+
+        calcVertices();
+        calcIndexArray();
+        calcVertexArray();
     }
 
     public float getVolume() {
@@ -74,7 +82,7 @@ public class Sphere {
         position = position.add(vec);
     }
 
-    public float[] getVertexArray() {
+    private float[] calcVertices() {
         int k = 0;
 
         for (int r = 0; r < RINGS; r++) {
@@ -83,12 +91,43 @@ public class Sphere {
                 float x = (float) (Math.cos(2*Math.PI * s * S) * Math.sin(Math.PI * r * R));
                 float z = (float) (Math.sin(2 * Math.PI * s * S) * Math.sin(Math.PI * r * R));
 
-                vertexArray[k++] = x * radius;
-                vertexArray[k++] = y * radius;
-                vertexArray[k++] = z * radius;
+                vertices[k++] = x * radius;
+                vertices[k++] = y * radius;
+                vertices[k++] = z * radius;
             }
         }
 
+        return vertices;
+    }
+
+    private int[] calcIndexArray() {
+        int k = 0;
+
+        for (int r = 0; r < RINGS; r++) {
+            for (int s = 0; s < SECTORS; s++) {
+                indices[k++] = r * SECTORS + s;
+                indices[k++] = r * SECTORS + (s+1);
+                indices[k++] = (r+1) * SECTORS + (s+1);
+                indices[k++] = (r+1) * SECTORS + s;
+            }
+        }
+
+        return indices;
+    }
+
+    private float[] calcVertexArray() {
+        int k = 0;
+
+        for (int i = 0; i < indices.length; i++) {
+            vertexArray[k++] = vertices[3 * indices[i] + 0];
+            vertexArray[k++] = vertices[3 * indices[i] + 1];
+            vertexArray[k++] = vertices[3 * indices[i] + 2];
+        }
+
+        return vertexArray;
+    }
+
+    public float[] getVertexArray() {
         return vertexArray;
     }
 
