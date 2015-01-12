@@ -14,16 +14,16 @@ public class Sphere {
     private static final float S = 1f/(SECTORS-1);
     private static final float DENSITY = 400f; // in kg/m^3
 
-    private final float[] vertices;
-    private final float[] normalArray;
-
     private float radius;
     private Vec3 position;
     private Vec3 velocity = Vec3.VEC3_ZERO;
     private List<Vec3> forces = Lists.newArrayList();
     private float mass;
+    private float[] vertices;
+    private float[] normalArray;
     private int[] indices;
     private float[] vertexArray;
+    private float[] normals;
 
     public Sphere(Vec3 position, float radius) {
         this.radius = radius;
@@ -31,13 +31,12 @@ public class Sphere {
         mass = getVolume() * DENSITY;
 
         vertices = new float[RINGS * SECTORS * 3];
-        normalArray = new float[RINGS * SECTORS * 3];
+        normals = new float[RINGS * SECTORS * 3];
         indices = new int[RINGS * SECTORS * 4];
         vertexArray = new float[indices.length * 3];
+        normalArray = new float[indices.length * 3];
 
-        calcVertices();
-        calcIndexArray();
-        calcVertexArray();
+        calcArrays();
     }
 
     public float getVolume() {
@@ -82,8 +81,16 @@ public class Sphere {
         position = position.add(vec);
     }
 
-    private float[] calcVertices() {
+    private void calcArrays() {
+        calcVerticesAndNormals();
+        calcIndexArray();
+        calcVertexArray();
+        calcNormalArray();
+    }
+
+    private void calcVerticesAndNormals() {
         int k = 0;
+        int n = 0;
 
         for (int r = 0; r < RINGS; r++) {
             for (int s = 0; s < SECTORS; s++) {
@@ -94,58 +101,52 @@ public class Sphere {
                 vertices[k++] = x * radius;
                 vertices[k++] = y * radius;
                 vertices[k++] = z * radius;
+
+                normals[n++] = x;
+                normals[n++] = y;
+                normals[n++] = z;
             }
         }
-
-        return vertices;
     }
 
-    private int[] calcIndexArray() {
+    private void calcIndexArray() {
         int k = 0;
 
-        for (int r = 0; r < RINGS; r++) {
-            for (int s = 0; s < SECTORS; s++) {
+        for (int r = 0; r < RINGS-1; r++) {
+            for (int s = 0; s < SECTORS-1; s++) {
                 indices[k++] = r * SECTORS + s;
-                indices[k++] = r * SECTORS + (s+1);
-                indices[k++] = (r+1) * SECTORS + (s+1);
                 indices[k++] = (r+1) * SECTORS + s;
+                indices[k++] = (r+1) * SECTORS + (s+1);
+                indices[k++] = r * SECTORS + (s+1);
             }
         }
-
-        return indices;
     }
 
-    private float[] calcVertexArray() {
+    private void calcVertexArray() {
         int k = 0;
 
-        for (int i = 0; i < indices.length; i++) {
-            vertexArray[k++] = vertices[3 * indices[i] + 0];
-            vertexArray[k++] = vertices[3 * indices[i] + 1];
-            vertexArray[k++] = vertices[3 * indices[i] + 2];
+        for (int index : indices) {
+            vertexArray[k++] = vertices[3 * index + 0];
+            vertexArray[k++] = vertices[3 * index + 1];
+            vertexArray[k++] = vertices[3 * index + 2];
         }
+    }
 
-        return vertexArray;
+    private void calcNormalArray() {
+        int k = 0;
+
+        for (int index : indices) {
+            normalArray[k++] = normals[3 * index + 0];
+            normalArray[k++] = normals[3 * index + 1];
+            normalArray[k++] = normals[3 * index + 2];
+        }
     }
 
     public float[] getVertexArray() {
         return vertexArray;
     }
 
-    public float[] getNormals() {
-        int k = 0;
-
-        for (int r = 0; r < RINGS; r++) {
-            for (int s = 0; s < SECTORS; s++) {
-                float y = (float) Math.sin(-Math.PI/2 + Math.PI * r * R);
-                float x = (float) (Math.cos(2*Math.PI * s * S) * Math.sin(Math.PI * r * R));
-                float z = (float) (Math.sin(2 * Math.PI * s * S) * Math.sin(Math.PI * r * R));
-
-                normalArray[k++] = x;
-                normalArray[k++] = y;
-                normalArray[k++] = z;
-            }
-        }
-
+    public float[] getNormalsArray() {
         return normalArray;
     }
 

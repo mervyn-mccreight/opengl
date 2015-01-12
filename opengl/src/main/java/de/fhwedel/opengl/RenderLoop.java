@@ -182,7 +182,7 @@ public class RenderLoop implements GLEventListener, KeyListener {
             gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, vertexBufferId);
             gl2.glBufferData(GL2.GL_ARRAY_BUFFER, vertexArray.length * Buffers.SIZEOF_FLOAT, FloatBuffer.wrap(vertexArray), GL2.GL_DYNAMIC_DRAW);
 
-            float[] normalArray = sphere.getNormals();
+            float[] normalArray = sphere.getNormalsArray();
 
             int normalBufferId = normalBuffer.get();
             gl2.glBindBuffer(GL2.GL_ARRAY_BUFFER, normalBufferId);
@@ -207,7 +207,7 @@ public class RenderLoop implements GLEventListener, KeyListener {
                     0,
                     0);
 
-            gl2.glDrawArrays(GL2.GL_POINTS, 0, vertexArray.length / 3); // starting from 0, 12*3 vertices total
+            gl2.glDrawArrays(GL2.GL_QUADS, 0, vertexArray.length / 3); // starting from 0, 12*3 vertices total
             gl2.glDisableVertexAttribArray(0);
             gl2.glDisableVertexAttribArray(2);
 
