@@ -17,7 +17,7 @@ public class HeightField {
     public static final float COLUMN_WIDTH = 0.8f; // in meters.
     private static final Vec3 INITIAL_POSITION = new Vec3(-COLUMN_WIDTH * DIMENSION / 2, -COLUMN_HEIGHT, -COLUMN_WIDTH * DIMENSION / 2);
     private static final float SPEED = 5f; // <measure-unit of width> per second, since delta-time is given in seconds.
-    private static final float SCALING_FACTOR = 0.99f;
+    private static final float SCALING_FACTOR = 0.992f;
     private static final float WATER_DENSITY = 999.97f; // in kg/m^3
     private final List<Integer> indices;
     private final World world;
@@ -131,8 +131,9 @@ public class HeightField {
                             column.replacedDelta = replacedHeight - column.replaced;
                             column.replaced = replacedHeight;
                         } else { // this part of sphere is only dipped in water.
-                            float replacedHeight = y - sphere.getBottomHalfY(x, z);
-                            displacedVolume += replacedHeight * COLUMN_WIDTH * COLUMN_WIDTH; // *width*height to get volume
+                            float replacedHeight = Math.max(y, COLUMN_HEIGHT + getPosition().getY()) - sphere.getBottomHalfY(x, z);
+                            float correctReplacedHeight = y - sphere.getBottomHalfY(x, z);
+                            displacedVolume += correctReplacedHeight * COLUMN_WIDTH * COLUMN_WIDTH; // *width*height to get volume
                             column.replacedDelta = replacedHeight - column.replaced;
                             column.replaced = replacedHeight;
                         }
@@ -180,7 +181,8 @@ public class HeightField {
                 Column top = getColumn(mColumns, i, j - 1);
                 Column bottom = getColumn(mColumns, i, j + 1);
 
-                float replacedDelta = Math.min(column.replacedDelta, 0.02f);
+                float max = 9001f;
+                float replacedDelta = (column.replacedDelta > 0) ? Math.min(column.replacedDelta, max) : Math.max(column.replacedDelta, -max);
 
                 left.height += replacedDelta / 6;
                 right.height += replacedDelta / 6;

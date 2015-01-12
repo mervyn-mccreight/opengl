@@ -40,7 +40,7 @@ public class RenderLoop implements GLEventListener, KeyListener {
         this.animator = animator;
         world = new World();
         heightField = new HeightField(world);
-        spheres.add(new Sphere(new Vec3(0, 6f, 0), 3f));
+        spheres.add(new Sphere(new Vec3(0, 6f, 0), 3));
         spheres.add(new Sphere(new Vec3(5, 6, 12), 3));
         heightField.addSphere(spheres);
     }
@@ -345,16 +345,16 @@ public class RenderLoop implements GLEventListener, KeyListener {
                 this.heightField.sprinkle();
                 break;
             case KeyEvent.VK_LEFT:
-                spheres.get(0).moveBy(new Vec3(-1f, 0, 0));
+                spheres.get(0).moveBy(new Vec3(-0.15f, 0, 0));
                 break;
             case KeyEvent.VK_RIGHT:
-                spheres.get(0).moveBy(new Vec3(1f, 0, 0));
+                spheres.get(0).moveBy(new Vec3(0.15f, 0, 0));
                 break;
             case KeyEvent.VK_UP:
-                spheres.get(0).moveBy(new Vec3(0, 0, -1f));
+                spheres.get(0).moveBy(new Vec3(0, 0, -0.15f));
                 break;
             case KeyEvent.VK_DOWN:
-                spheres.get(0).moveBy(new Vec3(0, 0, 1f));
+                spheres.get(0).moveBy(new Vec3(0, 0, 0.15f));
                 break;
             case KeyEvent.VK_PAGE_UP:
                 spheres.get(0).moveBy(new Vec3(0, 1f, 0));
