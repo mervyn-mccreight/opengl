@@ -34,6 +34,7 @@ public class RenderLoop implements GLEventListener, KeyListener {
     private int programId;
     private Mat4 view;
     private Mat4 projection;
+    private int polygonMode;
 
     public RenderLoop(FPSAnimator animator) {
         this.animator = animator;
@@ -63,7 +64,7 @@ public class RenderLoop implements GLEventListener, KeyListener {
 
         GL2 gl2 = gl.getGL2();
         //gl2.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_LINE);
-        gl2.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_FILL);
+        gl2.glPolygonMode(GL2.GL_FRONT_AND_BACK, polygonMode);
 
         programId = loadShaders(gl2);
 
@@ -71,7 +72,7 @@ public class RenderLoop implements GLEventListener, KeyListener {
         gl2.glGenBuffers(1, normalBuffer);
 
         // init camera.
-        view = Matrices.lookAt(new Vec3(0, 30, 30), // eye
+        view = Matrices.lookAt(new Vec3(0, 20, 22), // eye
                 new Vec3(0, 0, 0), // lookat
                 new Vec3(0, 1, 0) // up.
         );
@@ -283,6 +284,9 @@ public class RenderLoop implements GLEventListener, KeyListener {
 
         GL2 gl2 = drawable.getGL().getGL2();
 
+        gl2.glPolygonMode(GL2.GL_FRONT_AND_BACK, polygonMode);
+
+
         int viewId = gl2.glGetUniformLocation(programId, "V");
         int projectionId = gl2.glGetUniformLocation(programId, "P");
 
@@ -360,6 +364,9 @@ public class RenderLoop implements GLEventListener, KeyListener {
                 break;
             case KeyEvent.VK_G:
                 world.toggleGravity();
+                break;
+            case KeyEvent.VK_W:
+                polygonMode = (polygonMode == GL2.GL_FILL) ? GL2.GL_LINE : GL2.GL_FILL;
                 break;
             case KeyEvent.VK_ESCAPE:
                 exit();

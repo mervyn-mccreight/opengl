@@ -12,8 +12,8 @@ import javax.media.opengl.GLProfile;
 
 public class Window {
 
-    public static final int WIDTH = 1024;
-    public static final int HEIGHT = 768;
+    public static final int WIDTH = 1280;
+    public static final int HEIGHT = 720;
     private static final String TITLE = "Test Fenster";
 
     public static void main(String[] args) {
